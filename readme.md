@@ -1,6 +1,4 @@
-ACTIVE DEVELOPMENT, NO TESTING COMPLETED YET
-
-# Smart Contracts
+# Smart Contracts for HollywoodLand
 
 ## IMPORTANT
 ### Must-do remove before deploy
