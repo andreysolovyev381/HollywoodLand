@@ -1,0 +1,354 @@
+const {singletons } = require('@openzeppelin/test-helpers');
+//require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
+
+
+const TokenProxy = artifacts.require('TokenProxy');
+const TokenImplementation = artifacts.require('TokenImplementation');
+const PriceOracle = artifacts.require('PriceOracle');
+
+const NFTCatalogProxy = artifacts.require('NFTCatalogProxy');
+const NFTCatalogImplementation = artifacts.require('NFTCatalogImplementation');
+const NFTOwnershipImplementation = artifacts.require('NFTOwnershipImplementation');
+const NFTOwnershipProxy = artifacts.require('NFTOwnershipProxy');
+const NFT_TransactionPool_Implementation = artifacts.require('NFT_TransactionPool_Implementation');
+const NFT_TransactionPoolProxy = artifacts.require('NFT_TransactionPoolProxy');
+
+const ProjectCatalogProxy = artifacts.require('ProjectCatalogProxy');
+const ProjectCatalogImplementation = artifacts.require('ProjectCatalogImplementation');
+
+const DebtManagerProxy = artifacts.require('DebtManagerProxy');
+const DebtManagerImplementation = artifacts.require('DebtManagerImplementation');
+const RevenuesManagerProxy = artifacts.require('RevenuesManagerProxy');
+const RevenuesManagerImplementation = artifacts.require('RevenuesManagerImplementation');
+const StakesManagerProxy = artifacts.require('StakesManagerProxy');
+const StakesManagerImplementation = artifacts.require('StakesManagerImplementation');
+
+const GovernanceTokenProxy = artifacts.require('GovernanceTokenProxy');
+const GovernanceTokenImplementation = artifacts.require('GovernanceTokenImplementation');
+
+
+module.exports = async (deployer, network, accounts) => {
+
+    if (network === 'development') {
+        // In a test environment an ERC777 token requires deploying an ERC1820 registry
+        await singletons.ERC1820Registry(accounts[0]);
+    }
+
+    const deployer_address = accounts[1];
+    const admin_address = accounts[2];
+    const minter_address = accounts[3];
+    // console.log('deployer: ', deployer); //contract details
+    console.log(`deployer_address: ${deployer_address}`);
+    console.log(`admin_address: ${admin_address}`);
+    console.log(`minter_address: ${minter_address}`);
+
+
+    /// -------
+    /// ------------------------- Finance -------------------------
+    /// -------
+    /// ------------------------- Debt Manager -------------------------
+    await deployer.deploy(
+        DebtManagerImplementation,
+        {from:deployer_address});
+    const dm_impl = await DebtManagerImplementation.deployed();
+    console.log('Debt Manager Implementation was deployed successfully');
+
+    await deployer.deploy(
+        DebtManagerProxy,
+        "Hollywood Land Debt Manager", "HWLDM",
+        dm_impl.address,
+        admin_address,
+        minter_address,
+        minter_address, //todo: company account - change that
+        minter_address, //todo: funds manager account - change that
+        {from:deployer_address});
+    const dm_proxy = await DebtManagerProxy.deployed();
+    console.log('DebtManager Proxy was deployed successfully');
+    const dm_logic = await DebtManagerImplementation.at(dm_proxy.address);
+    await dm_logic.initialize("1", {from:minter_address});
+    console.log('DebtManager Implementation was initialized successfully');
+
+    /// ----------------------------------------------------------
+
+    /// ------------------------- Revenues Manager -------------------------
+    await deployer.deploy(
+        RevenuesManagerImplementation,
+        {from:deployer_address});
+    const rm_impl = await RevenuesManagerImplementation.deployed();
+    console.log('Revenues Manager Implementation was deployed successfully');
+
+    await deployer.deploy(
+        RevenuesManagerProxy,
+        "Hollywood Land Revenues Manager", "HWLRM",
+        rm_impl.address,
+        admin_address,
+        minter_address,
+        minter_address, //todo: company account - change that
+        minter_address, //todo: funds manager account - change that
+        {from:deployer_address});
+    const rm_proxy = await RevenuesManagerProxy.deployed();
+    console.log('RevenuesManager Proxy was deployed successfully');
+    const rm_logic = await RevenuesManagerImplementation.at(rm_proxy.address);
+    await rm_logic.initialize("1", {from:minter_address});
+    console.log('RevenuesManager Implementation was initialized successfully');
+
+    /// ----------------------------------------------------------
+
+    /// ------------------------- Stakes Manager -------------------------
+    await deployer.deploy(
+        StakesManagerImplementation,
+        {from:deployer_address});
+    const sm_impl = await StakesManagerImplementation.deployed();
+    console.log('Stakes Manager Implementation was deployed successfully');
+
+    await deployer.deploy(
+        StakesManagerProxy,
+        "Hollywood Land StakesManager", "HWLSM",
+        sm_impl.address,
+        admin_address,
+        minter_address,
+        minter_address, //todo: company account - change that
+        minter_address, //todo: funds manager account - change that
+        {from:deployer_address});
+    const sm_proxy = await StakesManagerProxy.deployed();
+    console.log('StakesManager Proxy was deployed successfully');
+    const sm_logic = await StakesManagerImplementation.at(sm_proxy.address);
+    await sm_logic.initialize("1", {from:minter_address});
+    console.log('StakesManager Implementation was initialized successfully');
+
+    /// ----------------------------------------------------------
+
+
+
+    /// -------
+    /// ------------------------- NFT -------------------------
+    /// -------
+
+    /// ------------------------- Catalog -------------------------
+    await deployer.deploy(
+        NFTCatalogImplementation,
+        {from:deployer_address});
+    const nft_c_impl = await NFTCatalogImplementation.deployed();
+    console.log('NFT Catalog Implementation was deployed successfully');
+
+    await deployer.deploy(
+        NFTCatalogProxy,
+        "Hollywood Land NFT Catalog", "HWLNFTC",
+        nft_c_impl.address,
+        admin_address,
+        minter_address,
+        minter_address, //todo: company account - change that
+        {from:deployer_address});
+    const nft_c_proxy = await NFTCatalogProxy.deployed();
+    console.log('NFT Catalog Proxy was deployed successfully');
+    const nft_c_logic = await NFTCatalogImplementation.at(nft_c_proxy.address);
+    await nft_c_logic.initialize("1", {from:minter_address});
+    console.log('NFT Catalog Implementation was initialized successfully');
+
+    /// ------------------------- Ownership -------------------------
+    await deployer.deploy(
+        NFTOwnershipImplementation,
+        {from:deployer_address});
+    const nft_o_impl = await NFTOwnershipImplementation.deployed();
+    console.log('NFT Ownership Implementation was deployed successfully');
+
+    await deployer.deploy(
+        NFTOwnershipProxy,
+        "Hollywood Land NFT Ownership", "HWLNFTO",
+        nft_o_impl.address,
+        admin_address,
+        minter_address,
+        {from:deployer_address});
+    const nft_o_proxy = await NFTOwnershipProxy.deployed();
+    console.log('NFT Ownership Proxy was deployed successfully');
+    const nft_o_logic = await NFTOwnershipImplementation.at(nft_o_proxy.address);
+    await nft_o_logic.initialize("1", {from:minter_address});
+    console.log('NFT Ownership Implementation was initialized successfully');
+
+    /// ------------------------- Transaction Pool -------------------------
+    await deployer.deploy(
+        NFT_TransactionPool_Implementation,
+        {from:deployer_address});
+    const nft_t_impl = await NFT_TransactionPool_Implementation.deployed();
+    console.log('NFT Transaction Pool Implementation was deployed successfully');
+
+    await deployer.deploy(
+        NFT_TransactionPoolProxy,
+        "Hollywood Land NFT Transaction Pool", "HWLNFT_TP",
+        nft_t_impl.address,
+        admin_address,
+        minter_address,
+        {from:deployer_address});
+    const nft_t_proxy = await NFT_TransactionPoolProxy.deployed();
+    console.log('NFT Transaction Pool Proxy was deployed successfully');
+    const nft_t_logic = await NFT_TransactionPool_Implementation.at(nft_t_proxy.address);
+    await nft_t_logic.initialize("1", {from:minter_address});
+    console.log('NFT Transaction Pool Implementation was initialized successfully');
+
+    /// ----------------------------------------------------------
+
+
+
+
+    /// -------
+    /// ------------------------- Project Catalog -------------------------
+    /// -------
+    await deployer.deploy(
+        ProjectCatalogImplementation,
+        {from:deployer_address});
+    const pc_impl = await ProjectCatalogImplementation.deployed();
+    console.log('Project Catalog Implementation was deployed successfully');
+
+    await deployer.deploy(
+        ProjectCatalogProxy,
+        "Hollywood Land Project Catalog", "HWLPC",
+        pc_impl.address,
+        admin_address,
+        minter_address,
+        minter_address, //todo: company account - change that
+        minter_address, //todo: project manager account - change that
+        {from:deployer_address});
+    const pc_proxy = await ProjectCatalogProxy.deployed();
+    console.log('Project Catalog Proxy was deployed successfully');
+    const pc_logic = await ProjectCatalogImplementation.at(pc_proxy.address);
+    await pc_logic.initialize("1", {from:minter_address});
+    console.log('Project Catalog Implementation was initialized successfully');
+
+    /// ----------------------------------------------------------
+
+
+    /// -------
+    /// ------------------------- Governance -------------------------
+    /// -------
+
+    /// ------------------------- Governance Token -------------------------
+    await deployer.deploy(
+        GovernanceTokenImplementation,
+        {from:deployer_address});
+    const gov_token_impl = await GovernanceTokenImplementation.deployed();
+    console.log('Governance Token Implementation was deployed successfully');
+
+    await deployer.deploy(
+        GovernanceTokenProxy,
+        "Hollywood Land Governance Token", "HWLGT",
+        gov_token_impl.address,
+        admin_address,
+        minter_address,
+        minter_address, //todo: company account - change that
+        {from:deployer_address});
+    const gov_token_proxy = await GovernanceTokenProxy.deployed();
+    console.log('Governance Token Proxy was deployed successfully');
+    const gov_token_logic = await GovernanceTokenImplementation.at(gov_token_proxy.address);
+    await gov_token_logic.initialize("1", {from:minter_address});
+    console.log('Governance Token Implementation was initialized successfully');
+
+    /// ------------------------- Governor -------------------------
+
+
+    /// -------
+    /// ------------------------- Token -------------------------
+    /// -------
+    await deployer.deploy(
+        TokenImplementation,
+        {from:deployer_address});
+    const token_impl = await TokenImplementation.deployed();
+    console.log('Token Implementation was deployed successfully');
+
+    await deployer.deploy(
+        TokenProxy,
+        "Hollywood Land Token",
+        "HWLT",
+        "500", //todo: check supply
+        token_impl.address,
+        admin_address,
+        minter_address,
+        {from:deployer_address});
+    const token_proxy = await TokenProxy.deployed();
+    console.log('Token Proxy was deployed successfully');
+    const token_logic = await TokenImplementation.at(token_proxy.address);
+
+    await token_logic.initialize(
+        "1",
+        [dm_logic.address, sm_logic.address, nft_c_logic.address, gov_token_logic.address],
+        "0",
+        {from:minter_address});
+    console.log('Token Implementation was initialized successfully');
+    /// ----------------------------------------------------------
+
+
+    /// -------
+    /// ------------------------- Price Oracle -------------------------
+    /// -------
+    await deployer.deploy(
+        PriceOracle,
+        admin_address,
+        {from:deployer_address});
+    const price_oracle = await PriceOracle.deployed();
+    console.log('Price Oracle was deployed successfully');
+    /// ----------------------------------------------------------
+
+
+
+
+
+    /// -------
+    /// ------------------------- Linkage -------------------------
+    /// -------
+    console.log('/// -------');
+    console.log('/// ------------------------- Linkage -------------------------');
+    console.log('/// -------');
+
+    await token_logic.setPriceOracle(price_oracle.address, {from: minter_address} );
+    console.log('Price Oracle was linked successfully');
+    await nft_c_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
+    await nft_c_logic.setNFT_TransactionPool(nft_t_logic.address, {from:minter_address});
+    await nft_t_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
+    await nft_t_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
+    await nft_o_logic.setNFT_TransactionPool(nft_t_logic.address, {from:minter_address});
+    await nft_o_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
+
+    await nft_c_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
+    await nft_c_logic.setDebtManager(dm_logic.address, {from:minter_address});
+    await nft_c_logic.setRevenuesManager(rm_logic.address, {from:minter_address});
+    await nft_c_logic.setStakesManager(sm_logic.address, {from:minter_address});
+    await nft_c_logic.setERC777(token_logic.address, {from:minter_address});
+    await nft_c_logic.setGovernanceToken(gov_token_logic.address, {from:minter_address});
+
+    await nft_o_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
+    await nft_o_logic.setDebtManager(dm_logic.address, {from:minter_address});
+    await nft_o_logic.setRevenuesManager(rm_logic.address, {from:minter_address});
+    await nft_o_logic.setStakesManager(sm_logic.address, {from:minter_address});
+    await nft_o_logic.setGovernanceToken(gov_token_logic.address, {from:minter_address});
+    console.log('NFT group was linked successfully');
+
+    await pc_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
+    await pc_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
+    await pc_logic.setDebtManager(dm_logic.address, {from:minter_address});
+    await pc_logic.setRevenuesManager(rm_logic.address, {from:minter_address});
+    await pc_logic.setStakesManager(sm_logic.address, {from:minter_address});
+    console.log('Project Catalog was linked successfully');
+
+    await dm_logic.setERC777(token_logic.address, {from:minter_address});
+    await dm_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
+    await dm_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
+    await dm_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
+
+    await rm_logic.setERC777(token_logic.address, {from:minter_address});
+    await rm_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
+    await rm_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
+    await rm_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
+    await rm_logic.setStakesManager(sm_logic.address, {from:minter_address});
+
+    await sm_logic.setERC777(token_logic.address, {from:minter_address});
+    await sm_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
+    await sm_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
+    await sm_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
+    console.log('Finance group was linked successfully');
+
+    await gov_token_logic.setERC777(token_logic.address, {from:minter_address});
+    await gov_token_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
+    await gov_token_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
+    await gov_token_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
+    console.log('Governance Token was linked successfully');
+
+}
