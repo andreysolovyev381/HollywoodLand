@@ -1,5 +1,3 @@
-ACTIVE DEVELOPMENT, NO TESTING COMPLETED YET
-
 # Smart Contracts
 
 ## IMPORTANT
@@ -11,7 +9,7 @@ Using Solidity timestamps, those are Unix timestamps, expressed in 'days', Refer
 
 ## General structure
 ### Proxy Implementation
-Made by using TransparentUpgradeableProxy paradigm from OpenZeppelin. To achieve padding all the data storages were separated from the respective implementations. Storages can be found at 'Storage' folder. 
+Made by using TransparentUpgradeableProxy paradigm from OpenZeppelin. All the data storages were separated from the respective implementations. Storages can be found at 'Storage' folder. 
 ### Token
 Contract is ERC20 and ERC777 compatible foundation for all of the oprations. ERC777 token is set upon deployment as a separate transaction to set up the ERC777 Operators.
 ### Finance
