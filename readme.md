@@ -11,7 +11,7 @@ Using Solidity timestamps, those are Unix timestamps, expressed in 'days', Refer
 ### Proxy Implementation
 Made by using TransparentUpgradeableProxy paradigm from OpenZeppelin. All the data storages were separated from the respective implementations. Storages contain "storage" in their names, and implementations contain "implementation". 
 ### Token
-Contract is ERC20 and ERC777 compatible foundation for all of the oprations. ERC777 token is set upon deployment as a separate transaction to set up the ERC777 Operators.
+Contract is ERC20 and ERC777 compatible foundation for all of the oprations. ERC777 token is set upon deployment фтв to set up the ERC777 Operators.
 ### Finance
 Is represented by three contracts, responsible for:
 - stakes (investments into a project)
