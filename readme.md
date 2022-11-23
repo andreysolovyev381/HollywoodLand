@@ -20,7 +20,7 @@ Is represented by three contracts, responsible for:
 ### ProjectCatalog
 Contract, responsible for holding a Project Catalog, manages Projects. Moves Projects through the stages (called Road Blocks).
 ### NFTMarketplace
-Set of three contracts, responsible for holding NFTs. Contextualy, everything in the system is an NFT - a project, a piece of art, stake in a project, collection. It provides an ability to trade anything. 
+Set of three contracts, responsible for holding NFTs. Conceptually, everything in the system is an NFT - a project, a piece of art, stake in a project, collection. It provides an ability to trade anything. 
 For the projects there are other type of trading - through the Stakes. One can consolidate the stakes that way consolidating quasi-equity.
 Sale is organized in two transactions:
 1) owner approves operator (a buyer) and fixes a price he wants to sell an NFT for;
