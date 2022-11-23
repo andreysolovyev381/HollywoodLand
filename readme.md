@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Smart Contracts for HollywoodLand
+=======
+# Smart Contracts
+>>>>>>> f9f996cc1fb3c4ae0647b9508abac8209e8f6ab6
 
 ## IMPORTANT
 ### Must-do remove before deploy
@@ -9,9 +13,9 @@ Using Solidity timestamps, those are Unix timestamps, expressed in 'days', Refer
 
 ## General structure
 ### Proxy Implementation
-Made by using TransparentUpgradeableProxy paradigm. All the data storages were separated from the respective implementations. Storages can be found at 'Storage' folder. 
+Made by using TransparentUpgradeableProxy paradigm from OpenZeppelin. All the data storages were separated from the respective implementations. Storages contain "storage" in their names, and implementations contain "implementation". 
 ### Token
-Contract is ERC20 and ERC777 compatible foundation for all of the oprations. ERC777 token is set upon deployment as a separate transaction to set up the ERC777 Operators.
+Contract is ERC20 and ERC777 compatible foundation for all of the oprations. ERC777 token is set upon deployment фтв to set up the ERC777 Operators.
 ### Finance
 Is represented by three contracts, responsible for:
 - stakes (investments into a project)
