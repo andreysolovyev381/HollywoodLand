@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 # Smart Contracts for HollywoodLand
-=======
-# Smart Contracts
->>>>>>> f9f996cc1fb3c4ae0647b9508abac8209e8f6ab6
 
 ## IMPORTANT
 ### Must-do remove before deploy
