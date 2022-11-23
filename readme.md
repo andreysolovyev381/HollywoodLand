@@ -1,17 +1,17 @@
-# Smart Contracts
+# Smart Contracts for HollywoodLand
 
 ## IMPORTANT
 ### Must-do remove before deploy
-There are some functions used for testing purposes only, each of them is marked and can be found under with 'todo:' mark. They MUST be removed before ANY real deployment.
+There are some functions used for testing purposes only, each of them is marked with 'todo:' mark. They MUST be removed before ANY real deployment.
 ### Timestamps
 Using Solidity timestamps, those are Unix timestamps, expressed in 'days', Refer to Solidity manuals. 
 
 
 ## General structure
 ### Proxy Implementation
-Made by using TransparentUpgradeableProxy paradigm from OpenZeppelin. All the data storages were separated from the respective implementations. Storages contain "storage" in their names, and implementations contain "implementation". 
+Made by using TransparentUpgradeableProxy paradigm. All the data storages were separated from the respective implementations. Storages can be found at 'Storage' folder. 
 ### Token
-Contract is ERC20 and ERC777 compatible foundation for all of the oprations. ERC777 token is set upon deployment, ERC777 Default Operators are set upon deployment as well.
+Contract is ERC20 and ERC777 compatible foundation for all of the oprations. ERC777 token is set upon deployment as a separate transaction to set up the ERC777 Operators.
 ### Finance
 Is represented by three contracts, responsible for:
 - stakes (investments into a project)
@@ -20,7 +20,7 @@ Is represented by three contracts, responsible for:
 ### ProjectCatalog
 Contract, responsible for holding a Project Catalog, manages Projects. Moves Projects through the stages (called Road Blocks).
 ### NFTMarketplace
-Set of three contracts, responsible for holding NFTs. Conceptually, everything in the system is an NFT - a project, a piece of art, stake in a project, collection. It provides an ability to trade anything. 
+Set of three contracts, responsible for holding NFTs. Contextualy, everything in the system is an NFT - a project, a piece of art, stake in a project, collection. It provides an ability to trade anything. 
 For the projects there are other type of trading - through the Stakes. One can consolidate the stakes that way consolidating quasi-equity.
 Sale is organized in two transactions:
 1) owner approves operator (a buyer) and fixes a price he wants to sell an NFT for;
