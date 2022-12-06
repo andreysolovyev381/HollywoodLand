@@ -145,6 +145,7 @@ contract('HollywoodLand Token - BRD',
                     assert.equal(balance, '5000', "Should be equal to 5 after a burn of 5");
                 });
                 it('burning tokens of average Joe', async () => {
+                    await this.logic_1.registerAddress(other_user, {from: minter_address});
                     await this.logic_1.fromEtherToTokens(other_user, {from: other_user, value: amount});
                     const user_balance = await this.logic_1.balanceOf(other_user, {from: other_user});
                     assert.equal(user_balance.toString(), '4200');
@@ -348,6 +349,8 @@ contract('HollywoodLand Token - BRD',
                     this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
                     await this.price_oracle.setPrice(token_price, {from: minter_address});
                     await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
+                    await this.logic_1.registerAddress(other_user, {from: minter_address});
+
                 });
                 it('contract balance should starts with 0 ETH', async () => {
                     let balance = await web3.eth.getBalance(this.logic_1.address);
@@ -403,6 +406,8 @@ contract('HollywoodLand Token - BRD',
                         this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
                         await this.price_oracle.setPrice(token_price, {from: minter_address});
                         await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
+                        await this.logic_1.registerAddress(other_user, {from: minter_address});
+
                     });
                     it('sending 0 ETH', async () => {
                         await expectRevert(
@@ -438,6 +443,7 @@ contract('HollywoodLand Token - BRD',
                     this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
                     await this.price_oracle.setPrice(token_price, {from: minter_address});
                     await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
+                    await this.logic_1.registerAddress(other_user, {from: minter_address});
                 });
                 it('basic Conversion', async () => {
                     // Send 42 ether to the contract.
@@ -485,6 +491,7 @@ contract('HollywoodLand Token - BRD',
                         this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
                         await this.price_oracle.setPrice(token_price, {from: minter_address});
                         await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
+                        await this.logic_1.registerAddress(other_user, {from: minter_address});
                     });
                     it('sending 0 Tokens', async () => {
                         await expectRevert(
@@ -501,6 +508,197 @@ contract('HollywoodLand Token - BRD',
                             'Your balance is lower than the amount of tokens you want to sell'
                         );
                     });
+                });
+            });
+        });
+
+        context('trial period', function () {
+            describe('Period management', function () {
+                let deploy_ts;
+                let one_year;
+                let two_years;
+                before(async () => {
+                    this.erc1820 = await singletons.ERC1820Registry(registryFunder);
+                    this.impl1 = await TokenImplementation.new({from:deployer_address});
+                    this.token_proxy = await TokenProxy.new(
+                        name, symbol, maxSupply,
+                        this.impl1.address,
+                        admin_address,
+                        minter_address,
+                        {from:deployer_address});
+
+                    deploy_ts = await time.latest();
+                    one_year = BN(deploy_ts.toNumber() + 31536000);
+                    two_years = BN(deploy_ts.toNumber() + 63072000);
+
+                    this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
+                    await this.logic_1.initialize(
+                        "1.0.0",
+                        [operator],
+                        initialSupply,
+                        {from:minter_address});
+                    this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
+                    await this.price_oracle.setPrice(token_price, {from: minter_address});
+                    await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
+                });
+                it('check trial period finish is one year from deploy time', async () => {
+                    const trial_finish = await this.logic_1.getTrialPeriodFinish();
+                    assert.equal(trial_finish.toString(), one_year.toString());
+                });
+                it('check trial period is ongoing', async () => {
+                    const is_trial = await this.logic_1.isTrialPeriod();
+                    assert.isTrue(is_trial);
+                });
+                it('revert on unauthorized attempt to change trial period finish by admin', async () => {
+                    await expectRevert.unspecified(
+                         this.logic_1.setTrialPeriodFinish(two_years, {from: admin_address}));
+                });
+                it('revert on unauthorized attempt to change trial period finish by average Joe', async () => {
+                    await expectRevert.unspecified(
+                        this.logic_1.setTrialPeriodFinish(two_years, {from: other_user}));
+                });
+                it('revert on incorrect attempt to change trial period for date in the past by correct role', async () => {
+                    await expectRevert(
+                        this.logic_1.setTrialPeriodFinish(deploy_ts.toString(), {from: minter_address}),
+                            "You are trying to set a finish period that is in the past"
+                            );
+                });
+                it('successfully change trial period finish', async () => {
+                    await this.logic_1.setTrialPeriodFinish(two_years, {from: minter_address});
+                    const trial_finish = await this.logic_1.getTrialPeriodFinish();
+                    assert.equal(trial_finish.toString(), two_years.toString());
+                });
+                it('successfully change trial period finish to the nearest time', async () => {
+                    const duration = BN(1000);
+                    const new_trial_finish = BN(deploy_ts.toNumber() + duration.toNumber());
+                    await this.logic_1.setTrialPeriodFinish(new_trial_finish.toString(), {from: minter_address});
+                    await time.increase(duration);
+                    const trial_finish = await this.logic_1.getTrialPeriodFinish();
+                    assert.equal(trial_finish.toString(), new_trial_finish.toString());
+                });
+                it('check trial period is over', async () => {
+                    const is_trial = await this.logic_1.isTrialPeriod();
+                    assert.isFalse(is_trial);
+                });
+
+            });
+            describe('Addresses management', function () {
+                before(async () => {
+                    this.erc1820 = await singletons.ERC1820Registry(registryFunder);
+                    this.impl1 = await TokenImplementation.new({from:deployer_address});
+                    this.token_proxy = await TokenProxy.new(
+                        name, symbol, maxSupply,
+                        this.impl1.address,
+                        admin_address,
+                        minter_address,
+                        {from:deployer_address});
+
+                    this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
+                    await this.logic_1.initialize(
+                        "1.0.0",
+                        [operator],
+                        initialSupply,
+                        {from:minter_address});
+                    this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
+                    await this.price_oracle.setPrice(token_price, {from: minter_address});
+                    await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
+                });
+                it('confirm no addresses are registered', async () => {
+                    assert.isFalse(await this.logic_1.isRegisteredAddress(other_user));
+                    assert.isFalse(await this.logic_1.isRegisteredAddress(deployer_address));
+                    assert.isFalse(await this.logic_1.isRegisteredAddress(minter_address));
+                });
+                it('revert on incorrect attempt to check an invalid address', async () => {
+                    await expectRevert(
+                        this.logic_1.isRegisteredAddress(ZERO_ADDRESS),
+                        "Address to check should be valid"
+                    );
+                });
+                it('revert on unauthorized attempt to register an address by admin', async () => {
+                    await expectRevert.unspecified(
+                        this.logic_1.registerAddress(other_user, {from: admin_address}));
+                });
+                it('revert on unauthorized attempt to register an address by average Joe', async () => {
+                    await expectRevert.unspecified(
+                        this.logic_1.registerAddress(other_user, {from: other_user}));
+                });
+                it('revert on incorrect attempt to register an invalid address by a correct role', async () => {
+                    await expectRevert(
+                        this.logic_1.registerAddress(ZERO_ADDRESS, {from: minter_address}),
+                        "Address to register should be valid"
+                    );
+                });
+                it('successfully register a valid addresses by a correct role', async () => {
+                    await this.logic_1.registerAddress(other_user, {from: minter_address});
+                    assert.isTrue(await this.logic_1.isRegisteredAddress(other_user));
+                    assert.isFalse(await this.logic_1.isRegisteredAddress(deployer_address));
+                    assert.isFalse(await this.logic_1.isRegisteredAddress(minter_address));
+                });
+            });
+            describe('Deal-flow management', function () {
+                let deploy_ts;
+                let new_trial_finish;
+                const duration = BN(1000);
+                let updated_amount;
+
+                before(async () => {
+                    this.erc1820 = await singletons.ERC1820Registry(registryFunder);
+                    this.impl1 = await TokenImplementation.new({from:deployer_address});
+                    this.token_proxy = await TokenProxy.new(
+                        name, symbol, maxSupply,
+                        this.impl1.address,
+                        admin_address,
+                        minter_address,
+                        {from:deployer_address});
+
+                    deploy_ts = await time.latest();
+                    new_trial_finish = BN(deploy_ts.toNumber() + duration.toNumber());
+
+                    this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
+                    await this.logic_1.initialize(
+                        "1.0.0",
+                        [operator],
+                        initialSupply,
+                        {from:minter_address});
+                    this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
+                    await this.price_oracle.setPrice(token_price, {from: minter_address});
+                    await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
+
+                    updated_amount = await web3.utils.fromWei(amount, 'wei');
+
+                });
+                it('confirm no deals are allowed with any addresses after deployment', async () => {
+                    await expectRevert(
+                        this.logic_1.fromEtherToTokens(other_user, {from: other_user, value: updated_amount}),
+                        "Address is not registered for Trial"
+                    );
+                    await expectRevert(
+                        this.logic_1.fromEtherToTokens(deployer_address, {from: deployer_address, value: updated_amount}),
+                        "Address is not registered for Trial"
+                    );
+                    await expectRevert(
+                        this.logic_1.fromEtherToTokens(operator, {from: operator, value: updated_amount}),
+                        "Address is not registered for Trial"
+                    );
+                });
+                it('confirm that selling Tokens is allowed to registered addresses only', async () => {
+                    await this.logic_1.registerAddress(other_user, {from: minter_address});
+                    expect(await this.logic_1.fromEtherToTokens(other_user, {from: other_user, value: updated_amount})).to.not.throw;
+                    await expectRevert(
+                        this.logic_1.fromEtherToTokens(deployer_address, {from: deployer_address, value: updated_amount}),
+                        "Address is not registered for Trial"
+                    );
+                    await expectRevert(
+                        this.logic_1.fromEtherToTokens(operator, {from: operator, value: updated_amount}),
+                        "Address is not registered for Trial"
+                    );
+                });
+                it('confirm that selling Tokens is allowed to any addresses after trial period is expired', async () => {
+                    await this.logic_1.setTrialPeriodFinish(new_trial_finish.toString(), {from: minter_address});
+                    await time.increase(duration);
+                    expect(await this.logic_1.fromEtherToTokens(other_user, {from: other_user, value: updated_amount})).to.not.throw;
+                    expect(await this.logic_1.fromEtherToTokens(deployer_address, {from: deployer_address, value: updated_amount})).to.not.throw;
+                    expect(await this.logic_1.fromEtherToTokens(operator, {from: operator, value: updated_amount})).to.not.throw;
                 });
             });
         });

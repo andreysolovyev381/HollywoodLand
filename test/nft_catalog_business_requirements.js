@@ -747,6 +747,9 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                 , "Not enough tokens in the wallet");
         });
         it('Stake checking users\' balances', async () => {
+            await this.token_logic.registerAddress(other_user, {from: minter_address});
+            await this.token_logic.registerAddress(digital_investor, {from: minter_address});
+
             let updated_amount = await web3.utils.fromWei(amount, 'wei');
             await this.token_logic.fromEtherToTokens(other_user, {from: other_user, value: updated_amount});
             let user_balance = await this.token_logic.balanceOf(other_user);
@@ -1349,6 +1352,9 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
             await this.pc_logic.createProject(other_user, "Test project", "Production", "Stream", SHARES_TOTAL.toString(), {from: other_user});
             await this.pc_logic.registerProjectBudget(other_user, "1", "1000", "3500", {from: other_user});
 
+            await this.token_logic.registerAddress(other_user, {from: minter_address});
+            await this.token_logic.registerAddress(digital_investor, {from: minter_address});
+
             let updated_amount = await web3.utils.fromWei(new BN(INITIAL_TOKEN_BALANCE), 'wei');
             await this.token_logic.fromEtherToTokens(other_user, {from: other_user, value: updated_amount});
             updated_amount = await web3.utils.fromWei(new BN(INITIAL_TOKEN_BALANCE), 'wei');
@@ -1395,10 +1401,10 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
         let is_ether_payment = true;
 
         it('set transaction fee for a randomly selected type', async () => {
-            const idx_for_fee = getRandomInt(0, 6);
+            const idx_for_fee = getRandomInt(0, 4);
             //setting a fee of 5%
             await this.nft_t_logic.setTransactionFee(types[idx_for_fee], "500", {from: minter_address});
-            console.log('TX Fee is set for ', types[idx_for_fee]);
+            console.log('TX Fee is set for', types[idx_for_fee]);
         });
 
         let idx = 0;
@@ -1972,6 +1978,9 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
             await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
             await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
 
+            await this.token_logic.registerAddress(other_user, {from: minter_address});
+            await this.token_logic.registerAddress(digital_investor, {from: minter_address});
+
             let updated_amount = await web3.utils.fromWei(new BN(INITIAL_TOKEN_BALANCE), 'wei');
             await this.token_logic.fromEtherToTokens(other_user, {from: other_user, value: updated_amount});
             updated_amount = await web3.utils.fromWei(new BN(INITIAL_TOKEN_BALANCE), 'wei');
@@ -2294,6 +2303,9 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
             await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
             await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
             await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
+
+            await this.token_logic.registerAddress(other_user, {from: minter_address});
+            await this.token_logic.registerAddress(digital_investor, {from: minter_address});
 
             let updated_amount = await web3.utils.fromWei(new BN(INITIAL_TOKEN_BALANCE), 'wei');
             await this.token_logic.fromEtherToTokens(other_user, {from: other_user, value: updated_amount});

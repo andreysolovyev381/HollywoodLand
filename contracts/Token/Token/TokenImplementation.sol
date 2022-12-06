@@ -72,13 +72,14 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
     }
     function fromEtherToTokens(address from) public payable {
         require(isOperatorFor(msg.sender, from), "Must be an operator for address");
+        if (isTrialPeriod()) require (isRegisteredAddress(from), "Address is not registered for Trial");
 
         uint256 tokens_to_buy = msg.value.mul(getTokenPrice());
         uint256 company_token_balance = this.balanceOf(m_company_account);
         require(tokens_to_buy > 0, "You need to send some more ether, what you provide is not enough for transaction");
         require(tokens_to_buy <= company_token_balance, "Not enough tokens in the reserve");
 
-        _send(m_company_account, msg.sender, tokens_to_buy, bytes(''), bytes(''), false);
+        _send(m_company_account, from, tokens_to_buy, bytes(''), bytes(''), false);
     }
     function fromTokensToEther(uint256 tokens_to_sell, address to) public nonReentrant {
         require(isOperatorFor(msg.sender, to), "Must be an operator for address");
@@ -92,10 +93,32 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
         uint256 company_eth_balance = address(this).balance;
         require(company_eth_balance >= eth_to_transfer, "HWLT Owner doesn't have enough funds to accept this sell request");
 
-        _send(msg.sender, m_company_account, tokens_to_sell, bytes(''), bytes(''), false);
-        (bool sent, bytes memory data) = msg.sender.call{value: eth_to_transfer}("");
+        _send(to, m_company_account, tokens_to_sell, bytes(''), bytes(''), false);
+        (bool sent, bytes memory data) = to.call{value: eth_to_transfer}("");
         require(sent, "Failed to send Ether");
     }
+
+
+    function getTrialPeriodFinish() public view returns (uint256) {
+        return m_trial_finish;
+    }
+    function setTrialPeriodFinish(uint256 new_trial_finish) public onlyRole(MINTER_ROLE) {
+        uint256 current_time = block.timestamp;
+        require (new_trial_finish >= current_time, "You are trying to set a finish period that is in the past");
+        m_trial_finish = new_trial_finish;
+    }
+    function isTrialPeriod() public view returns (bool) {
+        return m_trial_finish >= block.timestamp;
+    }
+    function registerAddress(address client_addr) public onlyRole(MINTER_ROLE) {
+        require (client_addr != address(0), "Address to register should be valid");
+        m_registered_addresses[client_addr] = true;
+    }
+    function isRegisteredAddress(address addr) public view returns (bool) {
+        require (addr != address(0), "Address to check should be valid");
+        return m_registered_addresses[addr];
+    }
+
 
     /**
     function bulkTransfer (address[] memory from, address[] memory to, uint256[] memory volumes, uint256 data_length) public {

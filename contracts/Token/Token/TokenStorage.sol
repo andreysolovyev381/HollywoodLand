@@ -13,6 +13,11 @@ contract HWLT_SpecificStorage {
     uint256 internal m_max_supply;
     string[] internal m_implementation_version;
 
+    //Trial period specific
+    mapping (address => bool) internal m_registered_addresses;
+    uint256 internal m_trial_finish;
+
+    //Pricr Oracle specific
     IPriceOracle internal m_price_oracle;
     bool internal m_price_oracle_is_set = false;
 

@@ -31,5 +31,7 @@ contract TokenProxy is ExternalTokenStorage, ExternalERC777Storage, AccessContro
         m_company_account = _minter_account; //todo: check how it relates to managing_account
         _grantRole(DEFAULT_ADMIN_ROLE, _admin_account);
         _grantRole(MINTER_ROLE, _minter_account);
+
+        m_trial_finish = block.timestamp + 31536000; //+1 year from now
     }
 }
