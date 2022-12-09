@@ -40,6 +40,9 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
         // register interfaces
         _ERC1820_REGISTRY.setInterfaceImplementer(address(this), keccak256("ERC777Token"), address(this));
         _ERC1820_REGISTRY.setInterfaceImplementer(address(this), keccak256("ERC20Token"), address(this));
+
+        //register minter_address
+        setAddressRegistered(msg.sender, true);
     }
     function mint(uint256 amount) public onlyRole(MINTER_ROLE) {
         require (totalSupply().add(amount) <= m_max_supply, "Amount that is about to be minted breaks the Max Supply");
@@ -72,7 +75,7 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
     }
     function fromEtherToTokens(address from) public payable {
         require(isOperatorFor(msg.sender, from), "Must be an operator for address");
-        if (isTrialPeriod()) require (isRegisteredAddress(from), "Address is not registered for Trial");
+        if (isTrialPeriod()) require (isAddressRegistered(from), "Address is not registered for Trial");
 
         uint256 tokens_to_buy = msg.value.mul(getTokenPrice());
         uint256 company_token_balance = this.balanceOf(m_company_account);
@@ -110,44 +113,99 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
     function isTrialPeriod() public view returns (bool) {
         return m_trial_finish >= block.timestamp;
     }
-    function registerAddress(address client_addr) public onlyRole(MINTER_ROLE) {
+    function setAddressRegistered(address client_addr, bool is_registered) public onlyRole(MINTER_ROLE) {
         require (client_addr != address(0), "Address to register should be valid");
-        m_registered_addresses[client_addr] = true;
+        m_registered_addresses[client_addr] = is_registered;
     }
-    function isRegisteredAddress(address addr) public view returns (bool) {
+    function isAddressRegistered(address addr) public view returns (bool) {
         require (addr != address(0), "Address to check should be valid");
         return m_registered_addresses[addr];
     }
 
+    /**
+    @dev Overriding the funcs - _send, _move, _approve
+     due to the requirement from the Client for the contract
+     to have an ability to restrict operations to allowed addresses only for a limited period of time.
+     The only change from original func is a requirement check:
+     if (isTrialPeriod()) ...
+     */
 
     /**
-    function bulkTransfer (address[] memory from, address[] memory to, uint256[] memory volumes, uint256 data_length) public {
-        uint256 i = 0;
-        for (i; i != data_length; ++i) {
-            require (this.isOperatorFor(msg.sender, from[i]), "You MUST be an operator for Sender address");
-            require(from[i] != address(0), "ERC777: send from the zero address");
-            require(to[i] != address(0), "ERC777: send to the zero address");
-            require(_balances[from[i]] >= volumes[i], "ERC777: transfer amount exceeds balance");
-        }
+     * @dev Send tokens
+     * @param from address token holder address
+     * @param to address recipient address
+     * @param amount uint256 amount of tokens to transfer
+     * @param userData bytes extra information provided by the token holder (if any)
+     * @param operatorData bytes extra information provided by the operator (if any)
+     * @param requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
+     */
+    function _send(
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData,
+        bool requireReceptionAck
+    ) internal virtual override {
+        require(from != address(0), "ERC777: send from the zero address");
+        require(to != address(0), "ERC777: send to the zero address");
 
-        for (i; i != data_length; ++i) {
-            //---------------- send ----------------------
-            _callTokensToSend(msg.sender, from[i], to[i], volumes[i], bytes(''), bytes(''));
-            //----------------- move -----------------------
-            _beforeTokenTransfer(msg.sender, from[i], to[i], volumes[i]);
-            uint256 fromBalance = _balances[from[i]];
-        unchecked {
-            _balances[from[i]] = fromBalance - volumes[i];
-        }
-            _balances[to[i]] += volumes[i];
-            emit Sent(msg.sender, from[i], to[i], volumes[i], bytes(''), bytes(''));
-            emit Transfer(from[i], to[i], volumes[i]);
-            //---------------- send ----------------------
-            _callTokensReceived(msg.sender, from[i], to[i], volumes[i], bytes(''), bytes(''), false);
-            //-----------------------------------------------
-        }
+        //the only line added
+        if (isTrialPeriod()) require (isAddressRegistered(to), "Address is not registered for Trial");
+
+        address operator = _msgSender();
+
+        _callTokensToSend(operator, from, to, amount, userData, operatorData);
+
+        super._move(operator, from, to, amount, userData, operatorData);
+
+        _callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
     }
-    */
+
+    function _move(
+        address operator,
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData
+    ) internal virtual override {
+        //the only line added
+        if (isTrialPeriod()) require (isAddressRegistered(to), "Address is not registered for Trial");
+
+    _beforeTokenTransfer(operator, from, to, amount);
+
+        uint256 fromBalance = _balances[from];
+        require(fromBalance >= amount, "ERC777: transfer amount exceeds balance");
+    unchecked {
+        _balances[from] = fromBalance - amount;
+    }
+        _balances[to] += amount;
+
+        emit Sent(operator, from, to, amount, userData, operatorData);
+        emit Transfer(from, to, amount);
+    }
+
+    /**
+     * @dev See {ERC20-_approve}.
+     *
+     * Note that accounts cannot have allowance issued by their operators.
+     */
+    function _approve(
+        address holder,
+        address spender,
+        uint256 value
+    ) internal virtual override {
+        require(holder != address(0), "ERC777: approve from the zero address");
+        require(spender != address(0), "ERC777: approve to the zero address");
+
+        //the only line added
+        if (isTrialPeriod()) require (isAddressRegistered(spender), "Address is not registered for Trial");
+
+        _allowances[holder][spender] = value;
+        emit Approval(holder, spender, value);
+    }
+
     //todo: for testing only, must be removed before deployment
     event BeforeTokenTransfer();
     //todo: for testing only, must be removed before deployment

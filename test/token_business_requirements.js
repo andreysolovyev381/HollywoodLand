@@ -145,7 +145,7 @@ contract('HollywoodLand Token - BRD',
                     assert.equal(balance, '5000', "Should be equal to 5 after a burn of 5");
                 });
                 it('burning tokens of average Joe', async () => {
-                    await this.logic_1.registerAddress(other_user, {from: minter_address});
+                    await this.logic_1.setAddressRegistered(other_user, true, {from: minter_address});
                     await this.logic_1.fromEtherToTokens(other_user, {from: other_user, value: amount});
                     const user_balance = await this.logic_1.balanceOf(other_user, {from: other_user});
                     assert.equal(user_balance.toString(), '4200');
@@ -349,7 +349,7 @@ contract('HollywoodLand Token - BRD',
                     this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
                     await this.price_oracle.setPrice(token_price, {from: minter_address});
                     await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
-                    await this.logic_1.registerAddress(other_user, {from: minter_address});
+                    await this.logic_1.setAddressRegistered(other_user, true, {from: minter_address});
 
                 });
                 it('contract balance should starts with 0 ETH', async () => {
@@ -406,7 +406,7 @@ contract('HollywoodLand Token - BRD',
                         this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
                         await this.price_oracle.setPrice(token_price, {from: minter_address});
                         await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
-                        await this.logic_1.registerAddress(other_user, {from: minter_address});
+                        await this.logic_1.setAddressRegistered(other_user, true, {from: minter_address});
 
                     });
                     it('sending 0 ETH', async () => {
@@ -443,7 +443,9 @@ contract('HollywoodLand Token - BRD',
                     this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
                     await this.price_oracle.setPrice(token_price, {from: minter_address});
                     await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
-                    await this.logic_1.registerAddress(other_user, {from: minter_address});
+                    await this.logic_1.setAddressRegistered(other_user, true, {from: minter_address});
+                    await this.logic_1.setAddressRegistered(minter_address, true, {from: minter_address});
+
                 });
                 it('basic Conversion', async () => {
                     // Send 42 ether to the contract.
@@ -491,7 +493,7 @@ contract('HollywoodLand Token - BRD',
                         this.price_oracle = await PriceOracle.new(minter_address, {from:deployer_address});
                         await this.price_oracle.setPrice(token_price, {from: minter_address});
                         await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
-                        await this.logic_1.registerAddress(other_user, {from: minter_address});
+                        await this.logic_1.setAddressRegistered(other_user, true, {from: minter_address});
                     });
                     it('sending 0 Tokens', async () => {
                         await expectRevert(
@@ -604,35 +606,41 @@ contract('HollywoodLand Token - BRD',
                     await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
                 });
                 it('confirm no addresses are registered', async () => {
-                    assert.isFalse(await this.logic_1.isRegisteredAddress(other_user));
-                    assert.isFalse(await this.logic_1.isRegisteredAddress(deployer_address));
-                    assert.isFalse(await this.logic_1.isRegisteredAddress(minter_address));
+                    assert.isFalse(await this.logic_1.isAddressRegistered(other_user));
+                    assert.isFalse(await this.logic_1.isAddressRegistered(deployer_address));
+                    assert.isFalse(await this.logic_1.isAddressRegistered(minter_address));
                 });
                 it('revert on incorrect attempt to check an invalid address', async () => {
                     await expectRevert(
-                        this.logic_1.isRegisteredAddress(ZERO_ADDRESS),
+                        this.logic_1.isAddressRegistered(ZERO_ADDRESS),
                         "Address to check should be valid"
                     );
                 });
                 it('revert on unauthorized attempt to register an address by admin', async () => {
                     await expectRevert.unspecified(
-                        this.logic_1.registerAddress(other_user, {from: admin_address}));
+                        this.logic_1.setAddressRegistered(other_user, true, {from: admin_address}));
                 });
                 it('revert on unauthorized attempt to register an address by average Joe', async () => {
                     await expectRevert.unspecified(
-                        this.logic_1.registerAddress(other_user, {from: other_user}));
+                        this.logic_1.setAddressRegistered(other_user, true, {from: other_user}));
                 });
                 it('revert on incorrect attempt to register an invalid address by a correct role', async () => {
                     await expectRevert(
-                        this.logic_1.registerAddress(ZERO_ADDRESS, {from: minter_address}),
+                        this.logic_1.setAddressRegistered(ZERO_ADDRESS, true, {from: minter_address}),
                         "Address to register should be valid"
                     );
                 });
                 it('successfully register a valid addresses by a correct role', async () => {
-                    await this.logic_1.registerAddress(other_user, {from: minter_address});
-                    assert.isTrue(await this.logic_1.isRegisteredAddress(other_user));
-                    assert.isFalse(await this.logic_1.isRegisteredAddress(deployer_address));
-                    assert.isFalse(await this.logic_1.isRegisteredAddress(minter_address));
+                    await this.logic_1.setAddressRegistered(other_user, true, {from: minter_address});
+                    assert.isTrue(await this.logic_1.isAddressRegistered(other_user));
+                    assert.isFalse(await this.logic_1.isAddressRegistered(deployer_address));
+                    assert.isFalse(await this.logic_1.isAddressRegistered(minter_address));
+                });
+                it('successfully unregister a valid addresses by a correct role', async () => {
+                    await this.logic_1.setAddressRegistered(other_user, false, {from: minter_address});
+                    assert.isFalse(await this.logic_1.isAddressRegistered(other_user));
+                    assert.isFalse(await this.logic_1.isAddressRegistered(deployer_address));
+                    assert.isFalse(await this.logic_1.isAddressRegistered(minter_address));
                 });
             });
             describe('Deal-flow management', function () {
@@ -664,10 +672,10 @@ contract('HollywoodLand Token - BRD',
                     await this.price_oracle.setPrice(token_price, {from: minter_address});
                     await this.logic_1.setPriceOracle(this.price_oracle.address, {from: minter_address} );
 
-                    updated_amount = await web3.utils.fromWei(amount, 'wei');
+                    updated_amount = await web3.utils.fromWei(BN(1), 'wei');
 
                 });
-                it('confirm no deals are allowed with any addresses after deployment', async () => {
+                it('confirm no deals are allowed with any addresses immediately after deployment', async () => {
                     await expectRevert(
                         this.logic_1.fromEtherToTokens(other_user, {from: other_user, value: updated_amount}),
                         "Address is not registered for Trial"
@@ -681,8 +689,8 @@ contract('HollywoodLand Token - BRD',
                         "Address is not registered for Trial"
                     );
                 });
-                it('confirm that selling Tokens is allowed to registered addresses only', async () => {
-                    await this.logic_1.registerAddress(other_user, {from: minter_address});
+                it('confirm that selling Tokens for Ether is allowed to registered addresses only', async () => {
+                    await this.logic_1.setAddressRegistered(other_user, true, {from: minter_address});
                     expect(await this.logic_1.fromEtherToTokens(other_user, {from: other_user, value: updated_amount})).to.not.throw;
                     await expectRevert(
                         this.logic_1.fromEtherToTokens(deployer_address, {from: deployer_address, value: updated_amount}),
@@ -693,12 +701,62 @@ contract('HollywoodLand Token - BRD',
                         "Address is not registered for Trial"
                     );
                 });
-                it('confirm that selling Tokens is allowed to any addresses after trial period is expired', async () => {
+                it('making enough balance for sender, other preparation for the rest of the tests', async () => {
+                    await this.logic_1.fromEtherToTokens(other_user, {from: other_user, value: BN('20')});
+                    await this.logic_1.setAddressRegistered(deployer_address, true, {from: minter_address});
+                    await this.logic_1.authorizeOperator(operator, {from: deployer_address});
+                    assert.isTrue(await this.logic_1.isOperatorFor(operator, deployer_address));
+                    await this.logic_1.authorizeOperator(operator, {from: other_user});
+                    assert.isTrue(await this.logic_1.isOperatorFor(operator, other_user));
+                });
+
+                it('confirm that sending Tokens is allowed to registered addresses only', async () => {
+                    expect(await this.logic_1.send(deployer_address, updated_amount, empty_bytes, {from: other_user})).to.not.throw;
+                    await expectRevert(
+                        this.logic_1.send(operator, updated_amount, empty_bytes,  {from: other_user}),
+                        "Address is not registered for Trial"
+                    );
+                });
+                it('confirm that approve-transfer Tokens is allowed to registered addresses only', async () => {
+                    await this.logic_1.setAddressRegistered(deployer_address, true, {from: minter_address});
+                    expect(await this.logic_1.approve(deployer_address, updated_amount, {from: other_user})).to.not.throw;
+                    expect(await this.logic_1.transfer(deployer_address, updated_amount, {from: other_user})).to.not.throw;
+                    await expectRevert(
+                        this.logic_1.approve(operator, updated_amount, {from: other_user}),
+                        "Address is not registered for Trial"
+                    );
+                    await expectRevert(
+                        this.logic_1.transfer(operator, updated_amount, {from: other_user}),
+                        "Address is not registered for Trial"
+                    );
+                });
+                it('confirm that operatorship works for registered addresses only', async () => {
+                    expect(await this.logic_1.operatorSend(deployer_address, other_user, updated_amount, empty_bytes, empty_bytes, {from: operator})).to.not.throw;
+                    await expectRevert(
+                        this.logic_1.operatorSend(other_user, operator, updated_amount, empty_bytes, empty_bytes, {from: operator}),
+                        "Address is not registered for Trial"
+                    );
+                });
+                it('confirm that selling Tokens for Ether is allowed to any addresses after trial period is expired', async () => {
                     await this.logic_1.setTrialPeriodFinish(new_trial_finish.toString(), {from: minter_address});
                     await time.increase(duration);
                     expect(await this.logic_1.fromEtherToTokens(other_user, {from: other_user, value: updated_amount})).to.not.throw;
                     expect(await this.logic_1.fromEtherToTokens(deployer_address, {from: deployer_address, value: updated_amount})).to.not.throw;
                     expect(await this.logic_1.fromEtherToTokens(operator, {from: operator, value: updated_amount})).to.not.throw;
+                });
+                it('confirm that sending Tokens is allowed to any addresses after trial period is expired', async () => {
+                    expect(await this.logic_1.send(deployer_address, updated_amount, empty_bytes, {from: other_user})).to.not.throw;
+                    expect(await this.logic_1.send(operator, updated_amount, empty_bytes, {from: other_user})).to.not.throw;
+                });
+                it('confirm that approve-transfer Tokens is allowed to any addresses after trial period is expired', async () => {
+                    expect(await this.logic_1.approve(deployer_address, updated_amount, {from: other_user})).to.not.throw;
+                    expect(await this.logic_1.transfer(deployer_address, updated_amount, {from: other_user})).to.not.throw;
+                    expect(await this.logic_1.approve(operator, updated_amount, {from: other_user})).to.not.throw;
+                    expect(await this.logic_1.transfer(operator, updated_amount, {from: other_user})).to.not.throw;
+                });
+                it('confirm that operatorship works for all addresses after trial period is expired', async () => {
+                    expect(await this.logic_1.operatorSend(deployer_address, other_user, updated_amount, empty_bytes, empty_bytes, {from: operator})).to.not.throw;
+                    expect(await this.logic_1.operatorSend(other_user, operator, updated_amount, empty_bytes, empty_bytes, {from: operator})).to.not.throw;
                 });
             });
         });

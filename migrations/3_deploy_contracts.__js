@@ -266,7 +266,6 @@ module.exports = async (deployer, network, accounts) => {
     const token_proxy = await TokenProxy.deployed();
     console.log('Token Proxy was deployed successfully');
     const token_logic = await TokenImplementation.at(token_proxy.address);
-    await token_logic.registerAddress(minter_address, {from: minter_address});
 
     await token_logic.initialize(
         "1",

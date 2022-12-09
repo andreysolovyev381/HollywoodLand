@@ -8,7 +8,9 @@ import "./ERC777WrapperStorage.sol";
  * a copy-paste from ERC777 implementation from OpenZeppelin;
  * ExternalStorage is the first one in inheritance DAG to keep it along with Proxy storage order.
  *
- * bulk transaction was added, see bulkTransfer. As a result some changes were introduced
+ * Client requested to restrict addresses for a period of time. As a result some changes were introduced
+ * _move changed from private to internal
+ * _move, _send, _approve to be overridden by children
  * _callTokensReceived changed from private to internal
  * _callTokensToSend changed from private to internal
  */
@@ -413,6 +415,11 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
         emit Transfer(from, address(0), amount);
     }
 
+    /**
+    @dev Changed to internal virtual to have an ability to override that.
+    if interface is overridden (another possible solution), then it must become internal anyway.
+     */
+
     function _move(
         address operator,
         address from,
@@ -420,7 +427,7 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
         uint256 amount,
         bytes memory userData,
         bytes memory operatorData
-    ) private {
+    ) internal virtual {
         _beforeTokenTransfer(operator, from, to, amount);
 
         uint256 fromBalance = _balances[from];
