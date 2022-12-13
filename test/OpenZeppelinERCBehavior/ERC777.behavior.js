@@ -7,16 +7,30 @@ const { ZERO_ADDRESS } = constants;
 const ERC777SenderRecipientMock = artifacts.require('ERC777SenderRecipientMock');
 
 function shouldBehaveLikeERC777DirectSendBurn (holder, recipient, data) {
+    beforeEach(async function () {
+        await this.token.setAddressRegistered(holder, true, {from: holder});
+        await this.token.setAddressRegistered(recipient, true, {from: holder});
+    });
     shouldBehaveLikeERC777DirectSend(holder, recipient, data);
     shouldBehaveLikeERC777DirectBurn(holder, data);
 }
 
 function shouldBehaveLikeERC777OperatorSendBurn (holder, recipient, operator, data, operatorData) {
+    beforeEach(async function () {
+        await this.token.setAddressRegistered(holder, true, {from: holder});
+        await this.token.setAddressRegistered(recipient, true, {from: holder});
+        await this.token.setAddressRegistered(operator, true, {from: holder});
+    });
     shouldBehaveLikeERC777OperatorSend(holder, recipient, operator, data, operatorData);
     shouldBehaveLikeERC777OperatorBurn(holder, operator, data, operatorData);
 }
 
 function shouldBehaveLikeERC777UnauthorizedOperatorSendBurn (holder, recipient, operator, data, operatorData) {
+    beforeEach(async function () {
+        await this.token.setAddressRegistered(holder, true, {from: holder});
+        await this.token.setAddressRegistered(recipient, true, {from: holder});
+        await this.token.setAddressRegistered(operator, true, {from: holder});
+    });
     shouldBehaveLikeERC777UnauthorizedOperatorSend(holder, recipient, operator, data, operatorData);
     shouldBehaveLikeERC777UnauthorizedOperatorBurn(holder, operator, data, operatorData);
 }
@@ -176,10 +190,19 @@ function shouldBehaveLikeERC777UnauthorizedOperatorBurn (holder, operator, data,
 }
 
 function shouldDirectSendTokens (from, to, amount, data) {
+    beforeEach(async function () {
+        await this.token.setAddressRegistered(from, true, {from: from});
+        await this.token.setAddressRegistered(to, true, {from: from});
+    });
     shouldSendTokens(from, null, to, amount, data, null);
 }
 
 function shouldOperatorSendTokens (from, operator, to, amount, data, operatorData) {
+    beforeEach(async function () {
+        await this.token.setAddressRegistered(from, true, {from: from});
+        await this.token.setAddressRegistered(to, true, {from: from});
+        await this.token.setAddressRegistered(operator, true, {from: from});
+    });
     shouldSendTokens(from, operator, to, amount, data, operatorData);
 }
 
@@ -281,6 +304,11 @@ function shouldBurnTokens (from, operator, amount, data, operatorData) {
 }
 
 function shouldBehaveLikeERC777InternalMint (recipient, operator, amount, data, operatorData) {
+    // beforeEach(async function () {
+    //     await this.token.setAddressRegistered(recipient, true, {from: this.sender});
+    //     await this.token.setAddressRegistered(operator, true, {from: this.sender});
+    // });
+
     shouldInternalMintTokens(operator, recipient, new BN('0'), data, operatorData);
     shouldInternalMintTokens(operator, recipient, amount, data, operatorData);
 
@@ -326,9 +354,11 @@ function shouldInternalMintTokens (operator, to, amount, data, operatorData) {
 }
 
 function shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook (operator, amount, data, operatorData) {
+
     context('when TokensRecipient reverts', function () {
         beforeEach(async function () {
             await this.tokensRecipientImplementer.setShouldRevertReceive(true);
+            await this.token.setAddressRegistered(operator, true, {from: this.sender});
         });
 
         it('send reverts', async function () {
@@ -356,6 +386,8 @@ function shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook (operator, am
     context('when TokensRecipient does not revert', function () {
         beforeEach(async function () {
             await this.tokensRecipientImplementer.setShouldRevertSend(false);
+            await this.token.setAddressRegistered(operator, true, {from: this.sender});
+            await this.token.setAddressRegistered(this.recipient, true, {from: this.sender});
         });
 
         it('TokensRecipient receives send data and is called after state mutation', async function () {
@@ -430,6 +462,10 @@ function shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook (operator, am
 }
 
 function shouldBehaveLikeERC777SendBurnWithSendHook (operator, amount, data, operatorData) {
+    beforeEach(async function () {
+        await this.token.setAddressRegistered(operator, true, {from: operator});
+    });
+
     context('when TokensSender reverts', function () {
         beforeEach(async function () {
             await this.tokensSenderImplementer.setShouldRevertSend(true);
@@ -461,6 +497,9 @@ function shouldBehaveLikeERC777SendBurnWithSendHook (operator, amount, data, ope
     context('when TokensSender does not revert', function () {
         beforeEach(async function () {
             await this.tokensSenderImplementer.setShouldRevertSend(false);
+            await this.token.setAddressRegistered(operator, true, {from: this.sender});
+            await this.token.setAddressRegistered(this.recipient, true, {from: this.sender});
+
         });
 
         it('TokensSender receives send data and is called before state mutation', async function () {
@@ -530,6 +569,7 @@ function shouldBehaveLikeERC777SendBurnWithSendHook (operator, amount, data, ope
 
 function removeBalance (holder) {
     beforeEach(async function () {
+        await this.token.setAddressRegistered(holder, true, {from: holder});
         await this.token.burn(await this.token.balanceOf(holder), '0x', { from: holder });
         (await this.token.balanceOf(holder)).should.be.bignumber.equal('0');
     });
@@ -550,6 +590,8 @@ async function assertTokensToSendCalled (token, txHash, operator, from, to, amou
 }
 
 async function sendFromHolder (token, holder, to, amount, data) {
+    await token.setAddressRegistered(to, true, {from: holder});
+
     if ((await web3.eth.getCode(holder)).length <= '0x'.length) {
         return token.send(to, amount, data, { from: holder });
     } else {
@@ -559,6 +601,8 @@ async function sendFromHolder (token, holder, to, amount, data) {
 }
 
 async function burnFromHolder (token, holder, amount, data) {
+    await token.setAddressRegistered(holder, true, {from: holder});
+
     if ((await web3.eth.getCode(holder)).length <= '0x'.length) {
         return token.burn(amount, data, { from: holder });
     } else {

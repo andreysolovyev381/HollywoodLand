@@ -57,6 +57,13 @@ contract('HollywoodLand Token - as an ERC777', function ([
                 "1.0.0", defaultOperators,
                 initialSupply,
                 {from:holder});
+            await this.token.setAddressRegistered(registryFunder, true, {from:holder});
+            await this.token.setAddressRegistered(holder, true, {from:holder});
+            await this.token.setAddressRegistered(defaultOperatorA, true, {from:holder});
+            await this.token.setAddressRegistered(defaultOperatorB, true, {from:holder});
+            await this.token.setAddressRegistered(newOperator, true, {from:holder});
+            await this.token.setAddressRegistered(admin_address, true, {from:holder});
+            await this.token.setAddressRegistered(minter_address, true, {from:holder});
         });
 
         describe('as an ERC20 token', function () {
@@ -444,6 +451,8 @@ contract('HollywoodLand Token - as an ERC777', function ([
                             this.tokensRecipientImplementer = await ERC777SenderRecipientMock.new();
                             this.recipient = this.tokensRecipientImplementer.address;
 
+                            await this.token.setAddressRegistered(this.recipient, true, {from:holder});
+                            await this.token.setAddressRegistered(anyone, true, {from:holder});
                             // Note that tokensRecipientImplementer doesn't implement the recipient interface for the recipient
                         });
 
@@ -558,6 +567,11 @@ contract('HollywoodLand Token - as an ERC777', function ([
                         // For the contract to be able to receive tokens (that it can later send), it must also implement the
                         // recipient interface.
 
+                        await this.token.setAddressRegistered(this.sender, true, {from: holder});
+                        await this.token.setAddressRegistered(operator, true, {from: holder});
+                        await this.token.setAddressRegistered(this.recipient, true, {from: holder});
+                        await this.token.setAddressRegistered(anyone, true, {from: holder});
+
                         await this.senderContract.recipientFor(this.sender);
                         await this.token.send(this.sender, amount, data, { from: holder });
                     });
@@ -567,6 +581,10 @@ contract('HollywoodLand Token - as an ERC777', function ([
 
                 context('with a contract as implementer for itself', function () {
                     beforeEach(async function () {
+
+                        await this.token.setAddressRegistered(operator, true, {from: holder});
+                        await this.token.setAddressRegistered(anyone, true, {from: holder});
+
                         this.tokensSenderImplementer = await ERC777SenderRecipientMock.new();
                         this.sender = this.tokensSenderImplementer.address;
 
@@ -599,6 +617,13 @@ contract('HollywoodLand Token - as an ERC777', function ([
                 "1.0.0", [],
                 initialSupply,
                 {from:holder});
+            await this.token.setAddressRegistered(registryFunder, true, {from:holder});
+            await this.token.setAddressRegistered(holder, true, {from:holder});
+            await this.token.setAddressRegistered(defaultOperatorA, true, {from:holder});
+            await this.token.setAddressRegistered(defaultOperatorB, true, {from:holder});
+            await this.token.setAddressRegistered(newOperator, true, {from:holder});
+            await this.token.setAddressRegistered(admin_address, true, {from:holder});
+            await this.token.setAddressRegistered(minter_address, true, {from:holder});
         });
 
         it('default operators list is empty', async function () {
@@ -626,6 +651,14 @@ contract('HollywoodLand Token - as an ERC777', function ([
                 initialSupply,
                 {from:holder});
 
+            await this.token.setAddressRegistered(registryFunder, true, {from:holder});
+            await this.token.setAddressRegistered(holder, true, {from:holder});
+            await this.token.setAddressRegistered(defaultOperatorA, true, {from:holder});
+            await this.token.setAddressRegistered(defaultOperatorB, true, {from:holder});
+            await this.token.setAddressRegistered(newOperator, true, {from:holder});
+            await this.token.setAddressRegistered(admin_address, true, {from:holder});
+            await this.token.setAddressRegistered(minter_address, true, {from:holder});
+            await this.token.setAddressRegistered(this.sender.address, true, {from:holder});
 
             await this.token.send(this.sender.address, 1, '0x', { from: holder });
         });

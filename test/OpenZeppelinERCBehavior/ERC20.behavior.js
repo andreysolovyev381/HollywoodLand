@@ -5,6 +5,13 @@ const { expect } = require('chai');
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 
 function shouldBehaveLikeERC20 (errorPrefix, initialSupply, initialHolder, recipient, anotherAccount) {
+    beforeEach(async function () {
+        await this.token.setAddressRegistered(initialHolder, true, {from: initialHolder});
+        await this.token.setAddressRegistered(recipient, true, {from: initialHolder});
+        await this.token.setAddressRegistered(anotherAccount, true, {from: initialHolder});
+
+    });
+
     describe('total supply', function () {
         it('returns the total amount of tokens', async function () {
             expect(await this.token.totalSupply()).to.be.bignumber.equal(initialSupply);
@@ -191,6 +198,11 @@ function shouldBehaveLikeERC20 (errorPrefix, initialSupply, initialHolder, recip
 }
 
 function shouldBehaveLikeERC20Transfer (errorPrefix, from, to, balance, transfer) {
+    beforeEach(async function () {
+        await this.token.setAddressRegistered(from, true, {from: from});
+        await this.token.setAddressRegistered(to, true, {from: from});
+    });
+
     describe('when the recipient is not the zero address', function () {
         describe('when the sender does not have enough balance', function () {
             const amount = balance.addn(1);
@@ -253,6 +265,11 @@ function shouldBehaveLikeERC20Transfer (errorPrefix, from, to, balance, transfer
 }
 
 function shouldBehaveLikeERC20Approve (errorPrefix, owner, spender, supply, approve) {
+    beforeEach(async function () {
+        await this.token.setAddressRegistered(owner, true, {from: owner});
+        await this.token.setAddressRegistered(spender, true, {from: owner});
+    });
+
     describe('when the spender is not the zero address', function () {
         describe('when the sender has enough balance', function () {
             const amount = supply;
