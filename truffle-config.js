@@ -23,7 +23,22 @@
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 
+require('dotenv').config();
+const HDWalletProvider = require('@truffle/hdwallet-provider');
+const { INFURA_PROJECT_ID, MNEMONIC } = process.env;
+
+
 module.exports = {
+  /**
+   * contracts_build_directory tells Truffle where to store compiled contracts
+   */
+  contracts_build_directory: './build/ethereum-contracts',
+
+  /**
+   * contracts_directory tells Truffle where the contracts you want to compile are located
+   */
+  contracts_directory: './contracts',
+
   /**
    * Networks define how you connect to your ethereum client and let you set the
    * defaults web3 uses to send transactions. If you don't specify one truffle
@@ -64,6 +79,13 @@ module.exports = {
     // timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
     // skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
     // },
+    goerli: {
+      provider: () => new HDWalletProvider(MNEMONIC, `wss://goerli.infura.io/ws/v3/a3a8c35511a74fdfa123e8879e6294e1`),
+      network_id: '5',
+      networkCheckTimeout: 100000000,
+      timeoutBlocks: 200,
+      gas: 4465030
+    }
     // Useful for private networks
     // private: {
     // provider: () => new HDWalletProvider(mnemonic, `https://network.io`),
@@ -123,4 +145,10 @@ module.exports = {
   //   }
   // }
   // }
+
+
+  db: {
+    enabled: true
+  }
+
 };

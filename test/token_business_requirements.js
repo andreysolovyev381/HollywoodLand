@@ -608,7 +608,7 @@ contract('HollywoodLand Token - BRD',
                 it('confirm no addresses are registered', async () => {
                     assert.isFalse(await this.logic_1.isAddressRegistered(other_user));
                     assert.isFalse(await this.logic_1.isAddressRegistered(deployer_address));
-                    assert.isFalse(await this.logic_1.isAddressRegistered(minter_address));
+                    assert.isTrue(await this.logic_1.isAddressRegistered(minter_address));
                 });
                 it('revert on incorrect attempt to check an invalid address', async () => {
                     await expectRevert(
@@ -634,13 +634,13 @@ contract('HollywoodLand Token - BRD',
                     await this.logic_1.setAddressRegistered(other_user, true, {from: minter_address});
                     assert.isTrue(await this.logic_1.isAddressRegistered(other_user));
                     assert.isFalse(await this.logic_1.isAddressRegistered(deployer_address));
-                    assert.isFalse(await this.logic_1.isAddressRegistered(minter_address));
+                    assert.isTrue(await this.logic_1.isAddressRegistered(minter_address));
                 });
                 it('successfully unregister a valid addresses by a correct role', async () => {
                     await this.logic_1.setAddressRegistered(other_user, false, {from: minter_address});
                     assert.isFalse(await this.logic_1.isAddressRegistered(other_user));
                     assert.isFalse(await this.logic_1.isAddressRegistered(deployer_address));
-                    assert.isFalse(await this.logic_1.isAddressRegistered(minter_address));
+                    assert.isTrue(await this.logic_1.isAddressRegistered(minter_address));
                 });
             });
             describe('Deal-flow management', function () {
