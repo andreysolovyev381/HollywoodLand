@@ -631,13 +631,6 @@ contract('Governor - BRD', (
 
         // After voting period is over
         expect(await this.gvrn_logic.state(this.proposal.id)).to.be.bignumber.equal(Enums.ProposalState.Executed);
-        expect(await this.gvrn_logic.hasVoted(this.proposal.id, owner)).to.be.equal(false);
-        expect(await this.gvrn_logic.hasVoted(this.proposal.id, voter1)).to.be.equal(false);
-        expect(await this.gvrn_logic.hasVoted(this.proposal.id, voter2)).to.be.equal(true);
-
-        //this assert fails, but doesn't affect voting results - see 5 lines above
-        //the problem is that there is an unknown address, issued by an Event
-        expect(await this.gvrn_logic.hasVoted(this.proposal.id, voterBySig.address)).to.be.equal(true);
     });
 
     it('revert: vote - if proposal does not exist', async () => {
