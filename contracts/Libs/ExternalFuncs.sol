@@ -51,7 +51,7 @@ library ExternalFuncs {
 
     //todo: must be updgraded before usage
     function prng(address _address) private view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp, _address )));
+        return uint256(keccak256(abi.encodePacked(block.prevrandao, block.timestamp, _address )));
     }
 
     function Today () public view returns (uint256) {

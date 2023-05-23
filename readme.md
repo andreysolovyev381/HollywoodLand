@@ -2,13 +2,14 @@
 
 ## IMPORTANT
 ### Must-do remove before deploy
-There are some functions used for testing purposes only, each of them is marked with 'todo:' mark. They MUST be removed before ANY real deployment.
+There are some functions used for testing purposes only, each of them is marked with 'todo:' mark. They MUST be removed before ANY real deployment. 
 
 ## General structure
 ### Proxy Implementation
 Made by using TransparentUpgradeableProxy paradigm from OpenZeppelin. All the data storages were separated from the respective implementations. Storages contain "storage" in their names, and implementations contain "implementation". 
-### Token
-Contract is ERC20 and ERC777 compatible foundation for all the operations. Consists of two parts:
+### Native Token
+Contract is ERC20 and ERC777 compatible foundation for all the operations (upd: after audit Client made a decision to remove ERC777 hooks functionality - see [See the Amendmens after Audit](#amendments-done-after-audit-completion)).
+Consists of two parts:
 ##### Token
 Token per se.
 ##### PriceOracle
@@ -68,6 +69,7 @@ contracts
 │   └───Governor
 │   └───GovernorCore //Governor inheritance structure
 └───Libs //third party's libs, own libs
+└───Mocks //UPD: contract mocks, used for testing
 └───NFT
 │   └───Libs //NFT's specific libs  
 │   └───NFT_TransactionPool
@@ -79,4 +81,65 @@ contracts
     └───Token 
 
 ```
+---
+## Amendments done after Audit Completion
+### Audit Findings
+The contracts were audited, here is the [first round findings](https://solidity.finance/audits/HollywoodLand/ "Audit Findings").
+Issues were addressed the following way:
+* **Finding #1** 
+  * ... Recommendation: An NFT's price should not be updated until the implementTransaction() function is called to ensure the NFT was actually purchased at the value last_price is being set.
+  * Code amended: NFTCatalogImplementation.sol, lines 264, 316
 
+
+* **Finding #2** 
+  * ... Recommendation: The fromTokensToEther() function should either check the msg.sender's balance and transfer the tokens from the msg.sender or check the to address' balance and send the tokens from the to address.
+  * Code amended: TokenImplementation.sol, line 89
+
+
+* **Finding #3**
+  * ... Recommendation: Checking that only the msg.value is equal to the transaction price is sufficient.
+  * Code amended: NFTCatalogImplementation.sol, line 287-290
+
+
+* **Finding #4**  
+  * Recommendation: The team should consider only allowing Project owners to mint or implementing a mint allowance system for Projects.
+  * Code amended: 
+    * NFTCatalogImplementation.sol, lines 150-152
+    * nft_catalog_business_requirements.js, block of tests at lines 1036-1200
+
+
+* **Finding #5** 
+  * ... Recommendation: The addStakes() function should be called before transferring the ERC777 tokens.
+  * Code amended: StakesManagerImplementation.sol, line 107
+
+
+* **Finding #6**
+  * ... Recommendation: The registerRevenue() function should check a revenue does not already exist for the project at the current. 
+  * Code amended: 
+    * RevenuesManagerImplementation.sol, line 94
+    * finance_business_requirements.js, line 1304
+
+
+* **Finding #7**
+  * ... Recommendation: The team should consider disabling Governance Token transfers so the intended functionality is more apparent.
+  * Code amended:
+    * GovernanceTokenProxy.sol, some lines were removed
+    * GovernanceTokenImplementation.sol, some lines were removed, lines 418-428 added
+    * GovernanceTokenStorage.sol, lines 15-20
+    * governance_token_business_requirements.js, lines 759-766, some other technical changes - ie, update of a project_id value inside of a test
+
+### Other amendments
+* **ERC777 HOOKS**: As per Client's request, some of Token's (so called "native token") methods were removed to reduce the risks of using ERC777 functionality. Specifically, "hooks" related functions as well as their usage were removed from the code.
+  * Files affected:
+    * TokenImplementation.sol, removed hooks;
+    * ERC777Wrapper.sol, removed hooks;
+    * ERC777.behavior.js, tests amended to reflect hooks absence; 
+    * token_as_ERC777.js **refactored to** token_as_ERC.js, tests amended to reflect hooks absence.
+  * **NOTE!** However, ERC777WrapperStorage.sol - a storage for Token, still contains the data structures for the hooks, as the Client may consider using them in the future by changing logic of this upgradable contract.
+  * Other contracts' functions and events containing "ERC777" were refactored to contain "NativeToken".
+* **GOVERNOR CONTRACT**: became available for testing, so the following changes were introduced:
+  * Contract was _heavily_ refactored;
+  * After testing started, another contract mock appeared (two contract mocks in total now), therefore there is a new folder contracts/Mocks, that contains the mocks;
+  * GovernorCore was moved to contracts/Libs as GovernorCoreWrapper.
+* **MINOR REFACTORING** 
+  * **UPGRADEABLE** feature - introduced Libs/InheritanceHelpers.sol, that helps to straighten up inheritance hierarchy;

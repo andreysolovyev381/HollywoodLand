@@ -10,10 +10,9 @@ pragma solidity >= 0.8.0;
 */
 
 import "./RevenuesManagerStorage.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
-contract RevenuesManagerProxy is ExternalRevenuesManagerStorage, AccessControl, TransparentUpgradeableProxy
+contract RevenuesManagerProxy is ExternalRevenuesManagerStorage, ControlTransparentUpgradeableBlock
 {
     constructor(
         string memory _name,

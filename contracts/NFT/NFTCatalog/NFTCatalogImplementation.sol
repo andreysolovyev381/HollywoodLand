@@ -4,13 +4,13 @@ pragma solidity >=0.8.0;
 import "./NFTCatalogStorage.sol";
 import "../Libs/NFT_Helpers.sol";
 import "../Libs/NFTStructs.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "../../Governance/GovernanceToken/GovernanceTokenImplementation.sol";
 
-contract NFTCatalogImplementation is ExternalNFTCatalogStorage, AccessControl, Initializable {
+contract NFTCatalogImplementation is ExternalNFTCatalogStorage, ControlBlock {
     using Counters for Counters.Counter;
     using SafeMath for uint256;
 
@@ -45,10 +45,10 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, AccessControl, I
         m_name = "NFT Catalog Implementation, not for usage";
         m_symbol = "DONT_USE";
     }
-    function initialize(string memory version) public initializer onlyRole(MINTER_ROLE) {
+    function initialize(string memory version, uint8 version_num) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
         m_implementation_version.push(version);
     }
-    //todo: DRY
+
     function name() public view returns (string memory) {
         return m_name;
     }
@@ -62,10 +62,10 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, AccessControl, I
         return m_implementation_version;
     }
 
-    function setERC777 (address token) public onlyRole(MINTER_ROLE) {
+    function setNativeToken (address token) public onlyRole(MINTER_ROLE) {
         require (token != address(0), "no address");
         m_token = IERC777Wrapper(token);
-        emit ERC777Set(token);
+        emit NativeTokenSet(token);
     }
     function setDebtManager (address debt_manager) public onlyRole(MINTER_ROLE) {
         require (debt_manager != address(0), "no address");
@@ -146,6 +146,10 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, AccessControl, I
 //                isOkNft(project_id)
 //                , "no Finance for no Project");
 //        }
+        //added as Audit Finding #4
+        if (nft_type == NFTStructs.NftType.ProjectArt) {
+            require (project_id != 0 && m_nft_ownership.isOwner(msg.sender, project_id), "Only project owner can mint Project Art");
+        }
 
         //set 100% ownership for minter, check operatorship
         uint256 nft_id = getNextNftID();
@@ -257,9 +261,8 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, AccessControl, I
 
         m_nft_transaction_pool.setTransactionStatus(tx_id, NFTStructs.TransactionStatus.Approved);
 
-        if (msg.sender != address(m_governance_token)){
-            m_nfts[nft_id]._last_price = updatePriceOfNFT(nft_id, shares, price);
-        }
+        // last price update is moved to this->implementTransaction as Audit Finding #1
+
         emit TransactionApproved (from, to, nft_id, shares, price, tx_id, is_ether_payment ? "ether" : "tokens");
         return tx_id;
     }
@@ -273,22 +276,18 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, AccessControl, I
         NFTStructs.Transaction memory txn = m_nft_transaction_pool.getTransaction(tx_id);
         require (isOkNft(txn._nft_id), "no NFT");
 
-        bool is_governance_transfer = (txn._to == address(m_governance_token));
+        // depositNFT or withdrawNFT methods of GovernanceTokenImplementation
+        // are the callers of this func, therefore
+        // changed from txn._to to msg.sender
+        bool is_governance_transfer = (msg.sender == address(m_governance_token));
         if (is_governance_transfer) {
             require (txn._price == 0 , "no pay for Governance");
         }
-        if (txn._is_ether_payment) {
-            require (msg.value == txn._price, "price mismatch");
-        }
 
+        //updated as Audit Finding #3
         txn._is_ether_payment ?
-            require(address(txn._to).balance >= msg.value, "no balance") :
+            require (msg.value == txn._price, "price mismatch") :
             require (m_token.balanceOf(txn._to) >= txn._price, "no balance");
-
-        //should be done for any type of NFT
-        m_nft_ownership.transferOwnership(msg.sender, tx_id);
-
-        m_nft_transaction_pool.deleteTransaction(tx_id, NFTStructs.TransactionStatus.Completed);
 
         if (!is_governance_transfer){
             uint256 fee_to_keep = m_nft_transaction_pool.getTransactionFeeTX(tx_id);
@@ -312,8 +311,16 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, AccessControl, I
                     m_token.operatorSend(txn._to, txn._from, value, '', '') ; //will revert in case msg.sender is not an operator for buyer address
                 }
             }
+
+            //added as Audit Finding #1
+            m_nfts[txn._nft_id]._last_price = updatePriceOfNFT(txn._nft_id, txn._shares, value);
         }
-        emit NFTTransferred (txn._from, txn._to, m_nft_to_projects[txn._nft_id], m_nft_to_collection[txn._nft_id], txn._nft_id, NFT_Helpers.getStrFromNftType(m_nfts[txn._nft_id]._type));
+
+        //should be done for any type of NFT, update of the ownership executed AFTER payment is successfully proceeded
+        m_nft_ownership.transferOwnership(msg.sender, tx_id);
+        m_nft_transaction_pool.deleteTransaction(tx_id, NFTStructs.TransactionStatus.Completed);
+
+    emit NFTTransferred (txn._from, txn._to, m_nft_to_projects[txn._nft_id], m_nft_to_collection[txn._nft_id], txn._nft_id, NFT_Helpers.getStrFromNftType(m_nfts[txn._nft_id]._type));
         emit TransactionImplemented (txn._from, txn._to, txn._nft_id, txn._shares, txn._price, tx_id);
     }
 
@@ -331,11 +338,12 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, AccessControl, I
     }
     function updatePriceOfNFT(uint256 nft_id, uint256 shares, uint256 price) private view isSetupOk returns (uint256) {
         uint256 total_shares = m_nft_ownership.getTotalSharesForNFT(nft_id);
-        return m_nfts[nft_id]._last_price == 0 ?
+
+        return
+            m_nfts[nft_id]._last_price == 0 ?
             total_shares.mul(price).div(shares) :
             //total price for NFT, 75% of old price plus 25% of new price
-            m_nfts[nft_id]._last_price.mul(3).div(4).add(
-                total_shares.mul(price).div(shares).div(4));
+            m_nfts[nft_id]._last_price.mul(3).add(total_shares.mul(price).div(shares)).div(4);
     }
 
     function getNFT (uint256 nft_id) public view returns (NFTStructs.NFT memory) {

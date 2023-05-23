@@ -61,7 +61,7 @@ contract RevenuesManager_SpecificStorage is ProxyStorage {
     mapping (uint256 => IterableSet.Set) internal m_project_to_revenue_timestamps;
 
     //Events
-    event ERC777Set(address token);
+    event NativeTokenSet(address token);
     event ProjectCatalogSet(address project_catalog);
     event CompanyAccountSet(address company_account);
     event NFTCatalogSet(address nft_catalog);

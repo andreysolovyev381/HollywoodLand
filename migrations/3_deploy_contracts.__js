@@ -1,5 +1,6 @@
-const {singletons } = require('@openzeppelin/test-helpers');
-//require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
+const {singletons, BN} = require('@openzeppelin/test-helpers');
+const {GovernorHelper} = require("../ideas/OpenZeppelinGovernance/governance");
+require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
 
 
 const TokenProxy = artifacts.require('TokenProxy');
@@ -26,6 +27,8 @@ const StakesManagerImplementation = artifacts.require('StakesManagerImplementati
 const GovernanceTokenProxy = artifacts.require('GovernanceTokenProxy');
 const GovernanceTokenImplementation = artifacts.require('GovernanceTokenImplementation');
 
+const GovernorProxy = artifacts.require('GovernorProxy');
+const GovernorImplementation = artifacts.require('GovernorImplementation');
 
 module.exports = async (deployer, network, accounts) => {
 
@@ -37,10 +40,27 @@ module.exports = async (deployer, network, accounts) => {
     const deployer_address = accounts[1];
     const admin_address = accounts[2];
     const minter_address = accounts[3];
+    const company_account = accounts[4];
+    const funds_manager_account = accounts[5];
+    const project_manager_account = accounts[6];
+
+    /*
+        const deployer_address = "0x0726DfE380598473B3809Bc78363Ca762D9B1821";
+        const admin_address = "0x43F5786A4E898ca825446557706B06c0a1211226";
+        const minter_address = "0xe53200173093d9726dEA2ec31E34F02E0f360cf1";
+        const company_account = "0x03A42027af5194B010a81C24b1d38122572Ed528";
+        const funds_manager_account = "0xCf052F9c0e4937b3A36F027BBac5B050478f7AB0";
+        const project_manager_account  = "0x7854fFB604508383601a0089c2E34657123ccC14";
+    */
+
+
     // console.log('deployer: ', deployer); //contract details
     console.log(`deployer_address: ${deployer_address}`);
     console.log(`admin_address: ${admin_address}`);
     console.log(`minter_address: ${minter_address}`);
+    console.log(`company_account: ${company_account}`);
+    console.log(`funds_manager_account: ${funds_manager_account}`);
+    console.log(`project_manager_account: ${project_manager_account}`);
 
 
     /// -------
@@ -59,13 +79,13 @@ module.exports = async (deployer, network, accounts) => {
         dm_impl.address,
         admin_address,
         minter_address,
-        minter_address, //todo: company account - change that
-        minter_address, //todo: funds manager account - change that
+        company_account,
+        funds_manager_account,
         {from:deployer_address});
     const dm_proxy = await DebtManagerProxy.deployed();
     console.log('DebtManager Proxy was deployed successfully');
     const dm_logic = await DebtManagerImplementation.at(dm_proxy.address);
-    await dm_logic.initialize("1", {from:minter_address});
+    await dm_logic.initialize("1", 1, {from:minter_address});
     console.log('DebtManager Implementation was initialized successfully');
 
     /// ----------------------------------------------------------
@@ -83,13 +103,13 @@ module.exports = async (deployer, network, accounts) => {
         rm_impl.address,
         admin_address,
         minter_address,
-        minter_address, //todo: company account - change that
-        minter_address, //todo: funds manager account - change that
+        company_account,
+        funds_manager_account,
         {from:deployer_address});
     const rm_proxy = await RevenuesManagerProxy.deployed();
     console.log('RevenuesManager Proxy was deployed successfully');
     const rm_logic = await RevenuesManagerImplementation.at(rm_proxy.address);
-    await rm_logic.initialize("1", {from:minter_address});
+    await rm_logic.initialize("1", 1, {from:minter_address});
     console.log('RevenuesManager Implementation was initialized successfully');
 
     /// ----------------------------------------------------------
@@ -107,13 +127,13 @@ module.exports = async (deployer, network, accounts) => {
         sm_impl.address,
         admin_address,
         minter_address,
-        minter_address, //todo: company account - change that
-        minter_address, //todo: funds manager account - change that
+        company_account,
+        funds_manager_account,
         {from:deployer_address});
     const sm_proxy = await StakesManagerProxy.deployed();
     console.log('StakesManager Proxy was deployed successfully');
     const sm_logic = await StakesManagerImplementation.at(sm_proxy.address);
-    await sm_logic.initialize("1", {from:minter_address});
+    await sm_logic.initialize("1", 1, {from:minter_address});
     console.log('StakesManager Implementation was initialized successfully');
 
     /// ----------------------------------------------------------
@@ -137,12 +157,12 @@ module.exports = async (deployer, network, accounts) => {
         nft_c_impl.address,
         admin_address,
         minter_address,
-        minter_address, //todo: company account - change that
+        company_account,
         {from:deployer_address});
     const nft_c_proxy = await NFTCatalogProxy.deployed();
     console.log('NFT Catalog Proxy was deployed successfully');
     const nft_c_logic = await NFTCatalogImplementation.at(nft_c_proxy.address);
-    await nft_c_logic.initialize("1", {from:minter_address});
+    await nft_c_logic.initialize("1", 1, {from:minter_address});
     console.log('NFT Catalog Implementation was initialized successfully');
 
     /// ------------------------- Ownership -------------------------
@@ -162,7 +182,7 @@ module.exports = async (deployer, network, accounts) => {
     const nft_o_proxy = await NFTOwnershipProxy.deployed();
     console.log('NFT Ownership Proxy was deployed successfully');
     const nft_o_logic = await NFTOwnershipImplementation.at(nft_o_proxy.address);
-    await nft_o_logic.initialize("1", {from:minter_address});
+    await nft_o_logic.initialize("1", 1, {from:minter_address});
     console.log('NFT Ownership Implementation was initialized successfully');
 
     /// ------------------------- Transaction Pool -------------------------
@@ -182,7 +202,7 @@ module.exports = async (deployer, network, accounts) => {
     const nft_t_proxy = await NFT_TransactionPoolProxy.deployed();
     console.log('NFT Transaction Pool Proxy was deployed successfully');
     const nft_t_logic = await NFT_TransactionPool_Implementation.at(nft_t_proxy.address);
-    await nft_t_logic.initialize("1", {from:minter_address});
+    await nft_t_logic.initialize("1", 1, {from:minter_address});
     console.log('NFT Transaction Pool Implementation was initialized successfully');
 
     /// ----------------------------------------------------------
@@ -205,13 +225,13 @@ module.exports = async (deployer, network, accounts) => {
         pc_impl.address,
         admin_address,
         minter_address,
-        minter_address, //todo: company account - change that
-        minter_address, //todo: project manager account - change that
+        company_account,
+        project_manager_account,
         {from:deployer_address});
     const pc_proxy = await ProjectCatalogProxy.deployed();
     console.log('Project Catalog Proxy was deployed successfully');
     const pc_logic = await ProjectCatalogImplementation.at(pc_proxy.address);
-    await pc_logic.initialize("1", {from:minter_address});
+    await pc_logic.initialize("1", 1, {from:minter_address});
     console.log('Project Catalog Implementation was initialized successfully');
 
     /// ----------------------------------------------------------
@@ -234,15 +254,39 @@ module.exports = async (deployer, network, accounts) => {
         gov_token_impl.address,
         admin_address,
         minter_address,
-        minter_address, //todo: company account - change that
+        company_account,
         {from:deployer_address});
     const gov_token_proxy = await GovernanceTokenProxy.deployed();
     console.log('Governance Token Proxy was deployed successfully');
     const gov_token_logic = await GovernanceTokenImplementation.at(gov_token_proxy.address);
-    await gov_token_logic.initialize("1", {from:minter_address});
+    await gov_token_logic.initialize("1", 1, {from:minter_address});
     console.log('Governance Token Implementation was initialized successfully');
 
     /// ------------------------- Governor -------------------------
+    const votingDelay = new BN(4); // 4 blocks
+    const votingPeriod = new BN(45818); //1 week
+    const proposalThreshold = new BN(0);
+    const requiredQuorum = new BN(4);
+
+    const gvrn_impl = await GovernorImplementation.new({from:deployer_address});
+    const gvrn_proxy = await GovernorProxy.new(
+        "HollywoodLand Governor", "HWLGRN",
+        gvrn_impl.address
+        , admin_address
+        , minter_address
+        , {from:deployer_address});
+    console.log('Governor Proxy was deployed successfully');
+    const gvrn_logic = await GovernorImplementation.at(gvrn_proxy.address);
+    await gvrn_logic.initialize(
+        "1", 1
+        , gov_token_logic.address
+        , votingDelay
+        , votingPeriod
+        , proposalThreshold
+        , requiredQuorum
+        , {from:minter_address}
+    );
+    console.log('Governor Implementation was initialized successfully');
 
 
     /// -------
@@ -268,8 +312,8 @@ module.exports = async (deployer, network, accounts) => {
     const token_logic = await TokenImplementation.at(token_proxy.address);
 
     await token_logic.initialize(
-        "1",
-        [dm_logic.address, sm_logic.address, nft_c_logic.address, gov_token_logic.address],
+        "1", 1,
+        [dm_logic.address, sm_logic.address, nft_c_logic.address, gov_token_logic.address, gvrn_logic.address],
         "0",
         {from:minter_address});
     console.log('Token Implementation was initialized successfully');
@@ -300,6 +344,7 @@ module.exports = async (deployer, network, accounts) => {
 
     await token_logic.setPriceOracle(price_oracle.address, {from: minter_address} );
     console.log('Price Oracle was linked successfully');
+
     await nft_c_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
     await nft_c_logic.setNFT_TransactionPool(nft_t_logic.address, {from:minter_address});
     await nft_t_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
@@ -311,7 +356,7 @@ module.exports = async (deployer, network, accounts) => {
     await nft_c_logic.setDebtManager(dm_logic.address, {from:minter_address});
     await nft_c_logic.setRevenuesManager(rm_logic.address, {from:minter_address});
     await nft_c_logic.setStakesManager(sm_logic.address, {from:minter_address});
-    await nft_c_logic.setERC777(token_logic.address, {from:minter_address});
+    await nft_c_logic.setNativeToken(token_logic.address, {from:minter_address});
     await nft_c_logic.setGovernanceToken(gov_token_logic.address, {from:minter_address});
 
     await nft_o_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
@@ -328,27 +373,32 @@ module.exports = async (deployer, network, accounts) => {
     await pc_logic.setStakesManager(sm_logic.address, {from:minter_address});
     console.log('Project Catalog was linked successfully');
 
-    await dm_logic.setERC777(token_logic.address, {from:minter_address});
+    await dm_logic.setNativeToken(token_logic.address, {from:minter_address});
     await dm_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
     await dm_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
     await dm_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
 
-    await rm_logic.setERC777(token_logic.address, {from:minter_address});
+    await rm_logic.setNativeToken(token_logic.address, {from:minter_address});
     await rm_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
     await rm_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
     await rm_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
     await rm_logic.setStakesManager(sm_logic.address, {from:minter_address});
 
-    await sm_logic.setERC777(token_logic.address, {from:minter_address});
+    await sm_logic.setNativeToken(token_logic.address, {from:minter_address});
     await sm_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
     await sm_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
     await sm_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
     console.log('Finance group was linked successfully');
 
-    await gov_token_logic.setERC777(token_logic.address, {from:minter_address});
+    await gov_token_logic.setNativeToken(token_logic.address, {from:minter_address});
     await gov_token_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
     await gov_token_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
     await gov_token_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
     console.log('Governance Token was linked successfully');
+
+    await gvrn_logic.setNativeToken(token_logic.address, {from:minter_address});
+    await gvrn_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
+    await gvrn_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
+    console.log('Governor was linked successfully');
 
 }

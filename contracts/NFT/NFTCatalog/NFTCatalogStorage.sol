@@ -40,7 +40,7 @@ contract NFTCatalogStorage_SpecificStorage is ProxyStorage {
     mapping (uint256 => uint256) m_nft_to_collection;
 
     //Events
-    event ERC777Set(address token);
+    event NativeTokenSet(address token);
     event DebtManagerSet(address debt_manager);
     event RevenuesManagerSet(address revenues_manager);
     event StakesManagerSet(address stakes_manager);

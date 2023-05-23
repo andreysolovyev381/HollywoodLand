@@ -3,14 +3,13 @@ pragma solidity >=0.8.0;
 
 import "./ProjectCatalogStorage.sol";
 import "../Libs/ExternalFuncs.sol";
+import "../Libs/InheritanceHelpers.sol";
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 
-contract ProjectCatalogImplementation is ExternalProjectCatalogStorage, AccessControl, Initializable {
+contract ProjectCatalogImplementation is ExternalProjectCatalogStorage, ControlBlock {
     using ExternalFuncs for *;
     using Counters for Counters.Counter;
     using SafeMath for uint256;
@@ -37,7 +36,7 @@ contract ProjectCatalogImplementation is ExternalProjectCatalogStorage, AccessCo
         m_symbol = "DONT_USE";
     }
 
-    function initialize(string memory version) public initializer onlyRole(MINTER_ROLE) {
+    function initialize(string memory version, uint8 version_num) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
         m_implementation_version.push(version);
     }
     function name() public view returns (string memory) {
@@ -46,11 +45,11 @@ contract ProjectCatalogImplementation is ExternalProjectCatalogStorage, AccessCo
     function symbol() public view returns (string memory) {
         return m_symbol;
     }
-    //todo: DRY
+
     function getCurrentVersion () public view returns (string memory) {
         return m_implementation_version[m_implementation_version.length - 1];
     }
-    //todo: DRY
+
     function getVersionHistory () public view returns (string[] memory) {
         return m_implementation_version;
     }
@@ -95,6 +94,7 @@ contract ProjectCatalogImplementation is ExternalProjectCatalogStorage, AccessCo
     , uint256 nft_ownership_total_shares
     ) public isSetupOk returns (uint256) {
         require (by_owner != address(0), "Address should be valid");
+        require (m_nft_ownership.isApprovedOperator(by_owner, msg.sender), "project: msg.sender is not approved");
         uint256 id = m_nft_catalog.mint(by_owner, "Project", "", 0, 0, 0, nft_ownership_total_shares);
         Project storage project = m_projects[id];
         project._name = project_name;
@@ -252,21 +252,6 @@ contract ProjectCatalogImplementation is ExternalProjectCatalogStorage, AccessCo
 
         emit ProjectBudgetUpdated(addr_from, project_id);
     }
-//    function spendBudget (
-//        uint256 project_id,
-//        uint256 tokens_to_spend
-//    ) public onlyRole(MINTER_ROLE) {
-//        require (projectExists(project_id));
-//        require (checkProjectBudgetIsActive(project_id), "Project budget either doesn't exist or is closed");
-//
-//        uint256 available = m_budgets[project_id]._stakes.sub(m_budgets[project_id]._stakes_spent);
-//        require (available >= tokens_to_spend, "Not enough budget to spend");
-//
-//        m_budgets[project_id]._stakes_spent = m_budgets[project_id]._stakes_spent.add(tokens_to_spend);
-//
-//        emit ProjectBudgetSpent(addr_from, project_id);
-//    }
-
     function closeProjectBudget (address addr_from, uint256 project_id) public isSetupOk {
         require (addr_from != address(0), "Address should be valid");
         require (projectExists(project_id));

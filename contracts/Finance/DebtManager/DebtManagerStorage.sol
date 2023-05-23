@@ -52,7 +52,7 @@ contract DebtManager_SpecificStorage is ProxyStorage {
 
 
     //Events
-    event ERC777Set(address token);
+    event NativeTokenSet(address token);
     event ProjectCatalogSet(address project_catalog);
     event CompanyAccountSet(address company_account);
     event NFTCatalogSet(address nft_catalog);

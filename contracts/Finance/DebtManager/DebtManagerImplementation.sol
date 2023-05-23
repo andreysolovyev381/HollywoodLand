@@ -5,14 +5,13 @@ import "../../NFT/Libs/NFTStructs.sol";
 
 import "../../Libs/ExternalFuncs.sol";
 import "../../Libs/IterableSet.sol";
+import "../../Libs/InheritanceHelpers.sol";
 import "./DebtManagerStorage.sol";
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 
-contract DebtManagerImplementation is ExternalDebtManagerStorage, AccessControl, Initializable {
+contract DebtManagerImplementation is ExternalDebtManagerStorage, ControlBlock {
     using ExternalFuncs for *;
     using SafeMath for uint256;
 
@@ -32,14 +31,14 @@ contract DebtManagerImplementation is ExternalDebtManagerStorage, AccessControl,
         m_symbol = "DONT_USE";
     }
 
-    function initialize(string memory version) public initializer onlyRole(MINTER_ROLE) {
+    function initialize(string memory version, uint8 version_num) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
         m_implementation_version.push(version);
     }
 
-    function setERC777 (address token) public onlyRole(MINTER_ROLE) {
+    function setNativeToken (address token) public onlyRole(MINTER_ROLE) {
         require (token != address(0), "Address should be valid");
         m_token = IERC777Wrapper(token);
-        emit ERC777Set(token);
+        emit NativeTokenSet(token);
     }
     function setProjectCatalog (address project_catalog) public onlyRole(MINTER_ROLE) {
         require (project_catalog != address(0), "Address should be valid");
@@ -68,11 +67,11 @@ contract DebtManagerImplementation is ExternalDebtManagerStorage, AccessControl,
     function symbol () public view returns (string memory) {
         return m_symbol;
     }
-    //todo: DRY
+
     function getCurrentVersion () public view returns (string memory) {
         return m_implementation_version[m_implementation_version.length - 1];
     }
-    //todo: DRY
+
     function getVersionHistory () public view returns (string[] memory) {
         return m_implementation_version;
     }

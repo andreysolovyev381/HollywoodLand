@@ -10,12 +10,10 @@ pragma solidity >= 0.8.0;
 */
 
 import "./StakesManagerStorage.sol";
-//import "../Libs/ERC777_SenderRecipient.sol"; //todo: check that it is ok
+import "../../Libs/InheritanceHelpers.sol";
 
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract StakesManagerProxy is ExternalStakesManagerStorage, AccessControl, TransparentUpgradeableProxy
+contract StakesManagerProxy is ExternalStakesManagerStorage, ControlTransparentUpgradeableBlock
 {
     constructor(
         string memory _name,

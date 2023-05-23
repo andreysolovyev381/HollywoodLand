@@ -1,6 +1,6 @@
 /*
     from:
-  h ttps://github.com/bmeredith/solidity-json-writer
+  https://github.com/bmeredith/solidity-json-writer
 
     license (MIT):
     https://github.com/bmeredith/solidity-json-writer/blob/main/LICENSE

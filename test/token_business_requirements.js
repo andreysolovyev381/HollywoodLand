@@ -46,7 +46,7 @@ contract('HollywoodLand Token - BRD',
                             {from:deployer_address});
                         this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                         await this.logic_1.initialize(
-                            "1.0.0",
+                            "1.0.0", 1,
                             [operator],
                             initialSupply,
                             {from:minter_address});
@@ -83,7 +83,7 @@ contract('HollywoodLand Token - BRD',
                             {from:deployer_address});
                         this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                         await this.logic_1.initialize(
-                            "1.0.0",
+                            "1.0.0", 1,
                             [operator],
                             initialSupply,
                             {from:minter_address});
@@ -121,7 +121,7 @@ contract('HollywoodLand Token - BRD',
                         {from:deployer_address});
                     this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                     await this.logic_1.initialize(
-                        "1.0.0",
+                        "1.0.0", 1,
                         [operator],
                         initialSupply,
                         {from:minter_address});
@@ -170,7 +170,7 @@ contract('HollywoodLand Token - BRD',
                             {from:deployer_address});
                         this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                         await this.logic_1.initialize(
-                            "1.0.0",
+                            "1.0.0", 1,
                             [operator],
                             initialSupply,
                             {from:minter_address});
@@ -210,7 +210,7 @@ contract('HollywoodLand Token - BRD',
                     {from:deployer_address});
                 this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                 await this.logic_1.initialize(
-                    "1.0.0",
+                    "1.0.0", 1,
                     [operator],
                     initialSupply,
                     {from:minter_address});
@@ -246,7 +246,7 @@ contract('HollywoodLand Token - BRD',
                         {from:deployer_address});
                     this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                     await this.logic_1.initialize(
-                        "1.0.0",
+                        "1.0.0", 1,
                         [operator],
                         initialSupply,
                         {from:minter_address});
@@ -275,7 +275,7 @@ contract('HollywoodLand Token - BRD',
                         {from:deployer_address});
                     this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                     await this.logic_1.initialize(
-                        "1.0.0",
+                        "1.0.0", 1,
                         [operator],
                         initialSupply,
                         {from:minter_address});
@@ -342,7 +342,7 @@ contract('HollywoodLand Token - BRD',
                         {from:deployer_address});
                     this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                     await this.logic_1.initialize(
-                        "1.0.0",
+                        "1.0.0", 1,
                         [operator],
                         initialSupply,
                         {from:minter_address});
@@ -399,7 +399,7 @@ contract('HollywoodLand Token - BRD',
                             {from:deployer_address});
                         this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                         await this.logic_1.initialize(
-                            "1.0.0",
+                            "1.0.0", 1,
                             [operator],
                             initialSupply,
                             {from:minter_address});
@@ -436,7 +436,7 @@ contract('HollywoodLand Token - BRD',
                         {from:deployer_address});
                     this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                     await this.logic_1.initialize(
-                        "1.0.0",
+                        "1.0.0", 1,
                         [operator],
                         initialSupply,
                         {from:minter_address});
@@ -486,7 +486,7 @@ contract('HollywoodLand Token - BRD',
                             {from:deployer_address});
                         this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                         await this.logic_1.initialize(
-                            "1.0.0",
+                            "1.0.0", 1,
                             [operator],
                             initialSupply,
                             {from:minter_address});
@@ -535,7 +535,7 @@ contract('HollywoodLand Token - BRD',
 
                     this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                     await this.logic_1.initialize(
-                        "1.0.0",
+                        "1.0.0", 1,
                         [operator],
                         initialSupply,
                         {from:minter_address});
@@ -597,7 +597,7 @@ contract('HollywoodLand Token - BRD',
 
                     this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                     await this.logic_1.initialize(
-                        "1.0.0",
+                        "1.0.0", 1,
                         [operator],
                         initialSupply,
                         {from:minter_address});
@@ -664,7 +664,7 @@ contract('HollywoodLand Token - BRD',
 
                     this.logic_1 = await TokenImplementation.at(this.token_proxy.address);
                     await this.logic_1.initialize(
-                        "1.0.0",
+                        "1.0.0", 1,
                         [operator],
                         initialSupply,
                         {from:minter_address});

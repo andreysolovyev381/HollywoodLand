@@ -4,14 +4,14 @@ pragma solidity >=0.8.0;
 
 import "../../Libs/ExternalFuncs.sol";
 import "../../Libs/IterableSet.sol";
+import "../../Libs/InheritanceHelpers.sol";
+
 import "./RevenuesManagerStorage.sol";
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract RevenuesManagerImplementation is ExternalRevenuesManagerStorage, AccessControl, Initializable, ReentrancyGuard{
+contract RevenuesManagerImplementation is ExternalRevenuesManagerStorage, ControlBlock, ReentrancyGuard{
     using ExternalFuncs for *;
     using SafeMath for uint256;
 
@@ -32,16 +32,15 @@ contract RevenuesManagerImplementation is ExternalRevenuesManagerStorage, Access
         m_symbol = "DONT_USE";
     }
 
-    function initialize(string memory version) public initializer onlyRole(MINTER_ROLE) {
-        //todo: not sure this is needed, no need to send tokens directly
-        //        _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
+    function initialize(string memory version, uint8 version_num) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
+//        _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
         m_implementation_version.push(version);
     }
 
-    function setERC777 (address token) public onlyRole(MINTER_ROLE) {
+    function setNativeToken (address token) public onlyRole(MINTER_ROLE) {
         require (token != address(0), "Address should be valid");
         m_token = IERC777Wrapper(token);
-        emit ERC777Set(token);
+        emit NativeTokenSet(token);
     }
     function setProjectCatalog (address project_catalog) public onlyRole(MINTER_ROLE) {
         require (project_catalog != address(0), "Address should be valid");
@@ -75,11 +74,11 @@ contract RevenuesManagerImplementation is ExternalRevenuesManagerStorage, Access
     function symbol () public view returns (string memory) {
         return m_symbol;
     }
-    //todo: DRY
+
     function getCurrentVersion () public view returns (string memory) {
         return m_implementation_version[m_implementation_version.length - 1];
     }
-    //todo: DRY
+
     function getVersionHistory () public view returns (string[] memory) {
         return m_implementation_version;
     }
@@ -90,6 +89,10 @@ contract RevenuesManagerImplementation is ExternalRevenuesManagerStorage, Access
         uint256 _now = block.timestamp;
 
         Revenue storage revenue = m_revenues[project_id]._time_stamps_to_revenues[_now];
+
+        //added as Audit Findings #6
+        require (revenue._timestamp_create != _now, "Revenue for this timestamp already exists");
+
         revenue._timestamp_create = _now;
         revenue._eth_volume = eth_volume;
         revenue._exists = true;

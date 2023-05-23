@@ -4,24 +4,22 @@ pragma solidity >=0.8.0;
 
 import "./ERC777WrapperStorage.sol";
 /**
- * @dev Wrapper over ERC777 to have it able to process External Storage, that is kept in Proxy Contract;
+ * @dev Wrapper over ERC777 to have it being able to process External Storage, that is kept in Proxy Contract;
  * a copy-paste from ERC777 implementation from OpenZeppelin;
  * ExternalStorage is the first one in inheritance DAG to keep it along with Proxy storage order.
  *
  * Client requested to restrict addresses for a period of time. As a result some changes were introduced
  * _move changed from private to internal
- * _move, _send, _approve to be overridden by children
+ * _move, _send, _approve to be overridden by heirs
  * _callTokensReceived changed from private to internal
  * _callTokensToSend changed from private to internal
+ * both hooks, _callTokensReceived && _callTokensToSend are restricted based on the Client's request
  */
 
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 /**
  * @dev Implementation of the {IERC777} interface.
  *
@@ -53,10 +51,6 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
         for (uint256 i = 0; i < defaultOperators_.length; i++) {
             _defaultOperators[defaultOperators_[i]] = true;
         }
-
-        // register interfaces
-        _ERC1820_REGISTRY.setInterfaceImplementer(address(this), keccak256("ERC777Token"), address(this));
-        _ERC1820_REGISTRY.setInterfaceImplementer(address(this), keccak256("ERC20Token"), address(this));
     }
 
     /**
@@ -129,15 +123,8 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
      */
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         require(recipient != address(0), "ERC777: transfer to the zero address");
-
         address from = _msgSender();
-
-        _callTokensToSend(from, from, recipient, amount, "", "");
-
         _move(from, from, recipient, amount, "", "");
-
-        _callTokensReceived(from, from, recipient, amount, "", "", false);
-
         return true;
     }
 
@@ -274,15 +261,8 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
         require(holder != address(0), "ERC777: transfer from the zero address");
 
         address spender = _msgSender();
-
-        _callTokensToSend(spender, holder, recipient, amount, "", "");
-
         _spendAllowance(holder, spender, amount);
-
         _move(spender, holder, recipient, amount, "", "");
-
-        _callTokensReceived(spender, holder, recipient, amount, "", "", false);
-
         return true;
     }
 
@@ -335,20 +315,14 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
         uint256 amount,
         bytes memory userData,
         bytes memory operatorData,
-        bool requireReceptionAck
+        bool //requireReceptionAck
     ) internal virtual {
         require(account != address(0), "ERC777: mint to the zero address");
 
         address operator = _msgSender();
-
-        _beforeTokenTransfer(operator, address(0), account, amount);
-
         // Update state variables
         _totalSupply += amount;
         _balances[account] += amount;
-
-        _callTokensReceived(operator, address(0), account, amount, userData, operatorData, requireReceptionAck);
-
         emit Minted(operator, account, amount, userData, operatorData);
         emit Transfer(address(0), account, amount);
     }
@@ -360,7 +334,7 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
      * @param amount uint256 amount of tokens to transfer
      * @param userData bytes extra information provided by the token holder (if any)
      * @param operatorData bytes extra information provided by the operator (if any)
-     * @param requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
+     * REMOVED AS A PART OF THE HOOKS requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
      */
     function _send(
         address from,
@@ -368,18 +342,12 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
         uint256 amount,
         bytes memory userData,
         bytes memory operatorData,
-        bool requireReceptionAck
+        bool //requireReceptionAck
     ) internal virtual {
         require(from != address(0), "ERC777: send from the zero address");
         require(to != address(0), "ERC777: send to the zero address");
-
         address operator = _msgSender();
-
-        _callTokensToSend(operator, from, to, amount, userData, operatorData);
-
         _move(operator, from, to, amount, userData, operatorData);
-
-        _callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
     }
 
     /**
@@ -398,9 +366,6 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
         require(from != address(0), "ERC777: burn from the zero address");
 
         address operator = _msgSender();
-
-        _callTokensToSend(operator, from, address(0), amount, data, operatorData);
-
         _beforeTokenTransfer(operator, from, address(0), amount);
 
         // Update state variables
@@ -456,57 +421,6 @@ contract ERC777Wrapper is ExternalERC777Storage, Context, IERC777, IERC20 {
 
         _allowances[holder][spender] = value;
         emit Approval(holder, spender, value);
-    }
-
-    /**
-     * @dev Call from.tokensToSend() if the interface is registered
-     * @param operator address operator requesting the transfer
-     * @param from address token holder address
-     * @param to address recipient address
-     * @param amount uint256 amount of tokens to transfer
-     * @param userData bytes extra information provided by the token holder (if any)
-     * @param operatorData bytes extra information provided by the operator (if any)
-     */
-    function _callTokensToSend(
-        address operator,
-        address from,
-        address to,
-        uint256 amount,
-        bytes memory userData,
-        bytes memory operatorData
-    ) internal {
-        address implementer = _ERC1820_REGISTRY.getInterfaceImplementer(from, _TOKENS_SENDER_INTERFACE_HASH);
-        if (implementer != address(0)) {
-            IERC777Sender(implementer).tokensToSend(operator, from, to, amount, userData, operatorData);
-        }
-    }
-
-    /**
-     * @dev Call to.tokensReceived() if the interface is registered. Reverts if the recipient is a contract but
-     * tokensReceived() was not registered for the recipient
-     * @param operator address operator requesting the transfer
-     * @param from address token holder address
-     * @param to address recipient address
-     * @param amount uint256 amount of tokens to transfer
-     * @param userData bytes extra information provided by the token holder (if any)
-     * @param operatorData bytes extra information provided by the operator (if any)
-     * @param requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
-     */
-    function _callTokensReceived(
-        address operator,
-        address from,
-        address to,
-        uint256 amount,
-        bytes memory userData,
-        bytes memory operatorData,
-        bool requireReceptionAck
-    ) internal {
-        address implementer = _ERC1820_REGISTRY.getInterfaceImplementer(to, _TOKENS_RECIPIENT_INTERFACE_HASH);
-        if (implementer != address(0)) {
-            IERC777Recipient(implementer).tokensReceived(operator, from, to, amount, userData, operatorData);
-        } else if (requireReceptionAck) {
-            require(!to.isContract(), "ERC777: token recipient contract has no implementer for ERC777TokensRecipient");
-        }
     }
 
     /**

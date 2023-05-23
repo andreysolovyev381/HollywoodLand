@@ -11,11 +11,9 @@ pragma solidity >= 0.8.0;
 
 import "./TokenStorage.sol";
 import "../../Libs/ERC777WrapperStorage.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
-
-contract TokenProxy is ExternalTokenStorage, ExternalERC777Storage, AccessControl, TransparentUpgradeableProxy
+contract TokenProxy is ExternalTokenStorage, ExternalERC777Storage, ControlTransparentUpgradeableBlock
 {
     constructor(
         string memory name,

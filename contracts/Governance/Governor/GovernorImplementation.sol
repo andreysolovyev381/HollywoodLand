@@ -1,32 +1,57 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-//import "@openzeppelin/contracts/governance/Governor.sol";
-//import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
-//import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-//import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-import "../GovernorCore/GovernorCore.sol";
-import "../GovernorCore/GovernorSettings.sol";
-import "../GovernorCore/GovernorCountingSimple.sol";
-import "../GovernorCore/GovernorVotesQuorumFraction.sol";
+import "../../Libs/GovernorCoreWrapper.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
+import "./GovernorDataStorage.sol";
 
-contract HWL_Governor is GovernorCore, GovernorSettings, GovernorCountingSimple, GovernorVotesQuorumFraction, AccessControl {
+contract GovernorImplementation is ExternalGovernorStorage, GovernorCoreWrapper, ControlBlock {
 
-
-    constructor(IGovernanceToken _token)
-    GovernorCore("HollywoodLand Governor")
-    GovernorSettings(1 /* 1 block */, 45818 /* 1 week */, 0)
-    GovernorVotesQuorumFraction(4, _token)
-    {
-        m_governance_token = _token;
+    modifier isSetupOk() {
+        require(
+            address(m_governance_token) != address(0) &&
+            address(m_token) != address(0) &&
+            address(m_nft_catalog) != address(0) &&
+            address(m_project_catalog) != address(0) &&
+            m_company_account != address(0)
+        , "Setup is not ok Governor");
+        _;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(GovernorCore, AccessControl) returns (bool) {
+    constructor()
+    GovernorCoreWrapper("Governor Implementation, not for usage"
+    , address(0)
+    , 0
+    , 1
+    , 0
+    , 0) {
+        m_name = "Governor Implementation, not for usage";
+        m_symbol = "DONT_USE";
+    }
+
+    function initialize(
+        string memory version
+    , uint8 version_num
+    , address governance_token
+    , uint256 voting_delay
+    , uint256 voting_period
+    , uint256 proposal_threshold
+    , uint256 required_quorum
+    ) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
+        m_implementation_version.push(version);
+
+        _setVotingDelay(voting_delay);
+        _setVotingPeriod(voting_period);
+        _setProposalThreshold(proposal_threshold);
+        _updateQuorumNumerator(required_quorum);
+
+        m_governance_token = IGovernanceToken(governance_token);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(GovernorCoreWrapper, AccessControl) returns (bool) {
         // In addition to the current interfaceId, also support previous version of the interfaceId that did not
         // include the castVoteWithReasonAndParams() function as standard
         return
@@ -35,94 +60,62 @@ contract HWL_Governor is GovernorCore, GovernorSettings, GovernorCountingSimple,
         this.castVoteWithReasonAndParams.selector ^
         this.castVoteWithReasonAndParamsBySig.selector ^
         this.getVotesWithParams.selector) ||
-        interfaceId == type(IGovernor).interfaceId ||
-        interfaceId == type(IERC1155Receiver).interfaceId ||
         interfaceId == type(IAccessControl).interfaceId || //from AccessControl
         super.supportsInterface(interfaceId);
     }
 
+    function name() public view override returns (string memory) {
+        return m_name;
+    }
+    function symbol() public view returns (string memory) {
+        return m_symbol;
+    }
+    function getCurrentVersion () public view returns (string memory) {
+        return m_implementation_version[m_implementation_version.length - 1];
+    }
+    function getVersionHistory () public view returns (string[] memory) {
+        return m_implementation_version;
+    }
 
-    function setERC777 (address token) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setNativeToken (address token) public onlyRole(MINTER_ROLE) {
         require (token != address(0), "Address should be valid");
         m_token = IERC777Wrapper(token);
-        emit ERC777Set(token);
+        emit NativeTokenSet(token);
     }
-    function setNFTCatalog (address nft_catalog) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setNFTCatalog (address nft_catalog) public onlyRole(MINTER_ROLE) {
         require (nft_catalog != address(0), "Address should be valid");
         m_nft_catalog = INFTCatalog(nft_catalog);
         emit NFTCatalogSet(nft_catalog);
     }
-    function setProjectCatalog (address project_catalog) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setProjectCatalog (address project_catalog) public onlyRole(MINTER_ROLE) {
         require (project_catalog != address(0), "Address should be valid");
         m_project_catalog = IProjectCatalog(project_catalog);
         emit ProjectCatalogSet(project_catalog);
     }
 
 
-
-    function votingDelay()
-    public
-    view
-    override(GovernorSettings)
-    returns (uint256)
-    {
-        return super.votingDelay();
-    }
-
-    function votingPeriod()
-    public
-    view
-    override(GovernorSettings)
-    returns (uint256)
-    {
-        return super.votingPeriod();
-    }
-
-    function quorum(uint256 blockNumber)
-    public
-    view
-    override(GovernorCore, GovernorVotesQuorumFraction)
-    returns (uint256)
-    {
-        return super.quorum(blockNumber);
-    }
-
-    function proposalThreshold()
-    public
-    view
-    override (GovernorCore, GovernorSettings)
-    returns (uint256)
-    {
-        return super.proposalThreshold();
-    }
-
-
     /**
-     * @dev See {IGovernor-propose}.
+ * @dev See {IGovernor-propose}.
      */
+
     function propose(
         uint256 project_id,
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
         string memory description
-    ) public override (GovernorCore) returns (uint256) {
-
+    ) public virtual override isSetupOk returns (uint256) {
         if (project_id != 0){
             NFTStructs.NFT memory project = m_nft_catalog.getNFT(project_id);
             require (project._type == NFTStructs.NftType.Project, "Can't propose for a non-Project");
             require (m_project_catalog.projectExists(project_id), "Project is not active");
         }
+        uint256 proposalId = hashProposal(project_id, targets, values, calldatas, keccak256(bytes(description)));
 
         require(
-            getVotes(_msgSender(), block.number - 1, project_id) >= proposalThreshold(),
+            getVotes(msg.sender, block.number - 1, project_id) >= proposalThreshold(),
             "Governor: proposer votes below proposal threshold"
         );
-
-        uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)));
-
-        m_proposal_to_project[proposalId] = project_id; //todo: check that this is enough
-
         require(targets.length == values.length, "Governor: invalid proposal length");
         require(targets.length == calldatas.length, "Governor: invalid proposal length");
         require(targets.length > 0, "Governor: empty proposal");
@@ -130,15 +123,71 @@ contract HWL_Governor is GovernorCore, GovernorSettings, GovernorCountingSimple,
         ProposalCore storage proposal = _proposals[proposalId];
         require(Timers.isUnset(proposal.voteStart), "Governor: proposal already exists");
 
+        m_proposal_to_project[proposalId] = project_id;
+        _storeProposal(_msgSender(), project_id, targets, values, new string[](calldatas.length), calldatas, description);
+
         uint64 snapshot = SafeCast.toUint64(block.number) + SafeCast.toUint64(votingDelay());
         uint64 deadline = snapshot + SafeCast.toUint64(votingPeriod());
 
-        Timers.setDeadline(proposal.voteStart,snapshot);
-        Timers.setDeadline(proposal.voteEnd,deadline);
+        Timers.setDeadline(proposal.voteStart, snapshot);
+        Timers.setDeadline(proposal.voteEnd, deadline);
 
         emit ProposalCreated(
             proposalId,
-            _msgSender(),
+            project_id,
+            msg.sender,
+            targets,
+            values,
+            new string[](targets.length),
+            calldatas,
+            snapshot,
+            deadline,
+            description
+        );
+        return proposalId;
+    }
+
+    function propose(
+        uint256 project_id,
+        address[] memory targets,
+        string[] memory signatures,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public override isSetupOk returns (uint256) {
+        require(signatures.length == calldatas.length, "Governor: invalid signatures length");
+
+        if (project_id != 0){
+            NFTStructs.NFT memory project = m_nft_catalog.getNFT(project_id);
+            require (project._type == NFTStructs.NftType.Project, "Can't propose for a non-Project");
+            require (m_project_catalog.projectExists(project_id), "Project is not active");
+        }
+        uint256 proposalId = hashProposal(project_id, targets, values, calldatas, keccak256(bytes(description)));
+
+        require(
+            getVotes(msg.sender, block.number - 1, project_id) >= proposalThreshold(),
+            "Governor: proposer votes below proposal threshold"
+        );
+        require(targets.length == values.length, "Governor: invalid proposal length");
+        require(targets.length == calldatas.length, "Governor: invalid proposal length");
+        require(targets.length > 0, "Governor: empty proposal");
+
+        ProposalCore storage proposal = _proposals[proposalId];
+        require(Timers.isUnset(proposal.voteStart), "Governor: proposal already exists");
+
+        m_proposal_to_project[proposalId] = project_id;
+        _storeProposal(_msgSender(), project_id, targets, values, signatures, calldatas, description);
+
+        uint64 snapshot = SafeCast.toUint64(block.number) + SafeCast.toUint64(votingDelay());
+        uint64 deadline = snapshot + SafeCast.toUint64(votingPeriod());
+
+        Timers.setDeadline(proposal.voteStart, snapshot);
+        Timers.setDeadline(proposal.voteEnd, deadline);
+
+        emit ProposalCreated(
+            proposalId,
+            project_id,
+            msg.sender,
             targets,
             values,
             new string[](targets.length),
@@ -150,50 +199,4 @@ contract HWL_Governor is GovernorCore, GovernorSettings, GovernorCountingSimple,
 
         return proposalId;
     }
-
-
-    /**
-  * @dev Internal vote casting mechanism: Check that the vote is pending, that it has not been cast yet, retrieve
-     * voting weight using {IGovernor-getVotes} and call the {_countVote} internal function.
-     *
-     * Emits a {IGovernor-VoteCast} event.
-     */
-    function _castVote(
-        uint256 proposalId,
-        address account,
-        uint8 support,
-        string memory reason,
-        bytes memory params
-    ) internal virtual override (GovernorCore) returns (uint256) {
-        ProposalCore storage proposal = _proposals[proposalId];
-        require(state(proposalId) == GovernorStructs.ProposalState.Active, "Governor: vote not currently active");
-
-        uint256 project_id = m_proposal_to_project[proposalId]; //new line
-        uint256 weight = _getVotes(account, Timers.getDeadline(proposal.voteStart), params, project_id);
-        _countVote(proposalId, account, support, weight, params);
-
-        if (params.length == 0) {
-            emit VoteCast(account, proposalId, support, weight, reason);
-        } else {
-            emit VoteCastWithParams(account, proposalId, support, weight, reason, params);
-        }
-
-        return weight;
-    }
-
-
-    /**
- * @dev
-  * Read the voting weight from the token's built in snapshot mechanism (see {Governor-_getVotes}).
-  * added project_id as an argument
- */
-    function _getVotes(
-        address account,
-        uint256 blockNumber,
-        bytes memory /*params*/,
-        uint256 project_id
-    ) internal view virtual override (GovernorCore) returns (uint256) {
-        return m_governance_token.getPastVotes(account, blockNumber, project_id);
-    }
-
 }

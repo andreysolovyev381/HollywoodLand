@@ -69,7 +69,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 minter_address, //todo: funds manager account - change that
                 {from:deployer_address});
             this.dm_logic = await DebtManagerImplementation.at(this.dm_proxy.address);
-            await this.dm_logic.initialize("1", {from:minter_address});
+            await this.dm_logic.initialize("1", 1, {from:minter_address});
 
             this.rm_impl = await RevenuesManagerImplementation.new({from:deployer_address});
             this.rm_proxy = await RevenuesManagerProxy.new(
@@ -81,7 +81,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 minter_address, //todo: funds manager account - change that
                 {from:deployer_address});
             this.rm_logic = await RevenuesManagerImplementation.at(this.rm_proxy.address);
-            await this.rm_logic.initialize("1", {from:minter_address});
+            await this.rm_logic.initialize("1", 1, {from:minter_address});
 
             this.sm_impl = await StakesManagerImplementation.new({from:deployer_address});
             this.sm_proxy = await StakesManagerProxy.new(
@@ -93,7 +93,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 minter_address, //todo: funds manager account - change that
                 {from:deployer_address});
             this.sm_logic = await StakesManagerImplementation.at(this.sm_proxy.address);
-            await this.sm_logic.initialize("1", {from:minter_address});
+            await this.sm_logic.initialize("1", 1, {from:minter_address});
 
             this.nft_c_impl = await NFTCatalogImplementation.new({from:deployer_address});
             this.nft_c_proxy = await NFTCatalogProxy.new(
@@ -104,7 +104,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 minter_address, //todo: company account - change that
                 {from:deployer_address});
             this.nft_c_logic = await NFTCatalogImplementation.at(this.nft_c_proxy.address);
-            await this.nft_c_logic.initialize("1", {from:minter_address});
+            await this.nft_c_logic.initialize("1", 1, {from:minter_address});
 
             this.nft_o_impl = await NFTOwnershipImplementation.new({from:deployer_address});
             this.nft_o_proxy = await NFTOwnershipProxy.new(
@@ -114,7 +114,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 minter_address,
                 {from:deployer_address});
             this.nft_o_logic = await NFTOwnershipImplementation.at(this.nft_o_proxy.address);
-            await this.nft_o_logic.initialize("1", {from:minter_address});
+            await this.nft_o_logic.initialize("1", 1, {from:minter_address});
 
             this.nft_t_impl = await NFT_TransactionPool_Implementation.new({from:deployer_address});
             this.nft_t_proxy = await NFT_TransactionPoolProxy.new(
@@ -124,7 +124,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 minter_address,
                 {from:deployer_address});
             this.nft_t_logic = await NFT_TransactionPool_Implementation.at(this.nft_t_proxy.address);
-            await this.nft_t_logic.initialize("1", {from:minter_address});
+            await this.nft_t_logic.initialize("1", 1, {from:minter_address});
 
             this.pc_impl = await ProjectCatalogImplementation.new({from:deployer_address});
             this.pc_proxy = await ProjectCatalogProxy.new(
@@ -136,7 +136,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 minter_address, //todo: project manager account - change that
                 {from:deployer_address});
             this.pc_logic = await ProjectCatalogImplementation.at(this.pc_proxy.address);
-            await this.pc_logic.initialize("1", {from:minter_address});
+            await this.pc_logic.initialize("1", 1, {from:minter_address});
 
             this.gt_impl = await GovernanceTokenImplementation.new({from:deployer_address});
             this.gt_proxy = await GovernanceTokenProxy.new(
@@ -147,7 +147,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 minter_address,
                 {from:deployer_address});
             this.gt_logic = await GovernanceTokenImplementation.at(this.gt_proxy.address);
-            await this.gt_logic.initialize("1", {from:minter_address});
+            await this.gt_logic.initialize("1", 1, {from:minter_address});
 
 
             this.erc1820 = await singletons.ERC1820Registry(registryFunder);
@@ -160,7 +160,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 {from:deployer_address});
             this.token_logic = await TokenImplementation.at(this.token_proxy.address);
             await this.token_logic.initialize(
-                "1",
+                "1", 1,
                 [this.dm_logic.address, this.sm_logic.address, this.nft_c_logic.address, this.gt_logic.address], //default Operators
                 initialSupply,
                 {from:minter_address});
@@ -180,7 +180,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
             await this.nft_c_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
             await this.nft_c_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
             await this.nft_c_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
-            await this.nft_c_logic.setERC777(this.token_logic.address, {from:minter_address});
+            await this.nft_c_logic.setNativeToken(this.token_logic.address, {from:minter_address});
             await this.nft_c_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
             await this.nft_o_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -189,18 +189,18 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
             await this.nft_o_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
             await this.nft_o_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
-            await this.dm_logic.setERC777(this.token_logic.address, {from:minter_address});
+            await this.dm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
             await this.dm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
             await this.dm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
             await this.dm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
 
-            await this.rm_logic.setERC777(this.token_logic.address, {from:minter_address});
+            await this.rm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
             await this.rm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
             await this.rm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
             await this.rm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
             await this.rm_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-            await this.sm_logic.setERC777(this.token_logic.address, {from:minter_address});
+            await this.sm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
             await this.sm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
             await this.sm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
             await this.sm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -211,7 +211,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
             // await this.pc_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
             // await this.pc_logic.setStakesManager(this.sm_logic.address, {from:minter_address}
 
-            await this.gt_logic.setERC777(this.token_logic.address, {from:minter_address});
+            await this.gt_logic.setNativeToken(this.token_logic.address, {from:minter_address});
             await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
             await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
             await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -342,7 +342,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.dm_logic = await DebtManagerImplementation.at(this.dm_proxy.address);
-                await this.dm_logic.initialize("1", {from:minter_address});
+                await this.dm_logic.initialize("1", 1, {from:minter_address});
 
                 this.rm_impl = await RevenuesManagerImplementation.new({from:deployer_address});
                 this.rm_proxy = await RevenuesManagerProxy.new(
@@ -354,7 +354,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.rm_logic = await RevenuesManagerImplementation.at(this.rm_proxy.address);
-                await this.rm_logic.initialize("1", {from:minter_address});
+                await this.rm_logic.initialize("1", 1, {from:minter_address});
 
                 this.sm_impl = await StakesManagerImplementation.new({from:deployer_address});
                 this.sm_proxy = await StakesManagerProxy.new(
@@ -366,7 +366,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.sm_logic = await StakesManagerImplementation.at(this.sm_proxy.address);
-                await this.sm_logic.initialize("1", {from:minter_address});
+                await this.sm_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_c_impl = await NFTCatalogImplementation.new({from:deployer_address});
                 this.nft_c_proxy = await NFTCatalogProxy.new(
@@ -377,7 +377,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: company account - change that
                     {from:deployer_address});
                 this.nft_c_logic = await NFTCatalogImplementation.at(this.nft_c_proxy.address);
-                await this.nft_c_logic.initialize("1", {from:minter_address});
+                await this.nft_c_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_o_impl = await NFTOwnershipImplementation.new({from:deployer_address});
                 this.nft_o_proxy = await NFTOwnershipProxy.new(
@@ -387,7 +387,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_o_logic = await NFTOwnershipImplementation.at(this.nft_o_proxy.address);
-                await this.nft_o_logic.initialize("1", {from:minter_address});
+                await this.nft_o_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_t_impl = await NFT_TransactionPool_Implementation.new({from:deployer_address});
                 this.nft_t_proxy = await NFT_TransactionPoolProxy.new(
@@ -397,7 +397,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_t_logic = await NFT_TransactionPool_Implementation.at(this.nft_t_proxy.address);
-                await this.nft_t_logic.initialize("1", {from:minter_address});
+                await this.nft_t_logic.initialize("1", 1, {from:minter_address});
 
                 this.pc_impl = await ProjectCatalogImplementation.new({from:deployer_address});
                 this.pc_proxy = await ProjectCatalogProxy.new(
@@ -409,7 +409,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: project manager account - change that
                     {from:deployer_address});
                 this.pc_logic = await ProjectCatalogImplementation.at(this.pc_proxy.address);
-                await this.pc_logic.initialize("1", {from:minter_address});
+                await this.pc_logic.initialize("1", 1, {from:minter_address});
 
                 this.gt_impl = await GovernanceTokenImplementation.new({from:deployer_address});
                 this.gt_proxy = await GovernanceTokenProxy.new(
@@ -420,7 +420,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.gt_logic = await GovernanceTokenImplementation.at(this.gt_proxy.address);
-                await this.gt_logic.initialize("1", {from:minter_address});
+                await this.gt_logic.initialize("1", 1, {from:minter_address});
 
 
                 this.erc1820 = await singletons.ERC1820Registry(registryFunder);
@@ -433,7 +433,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     {from:deployer_address});
                 this.token_logic = await TokenImplementation.at(this.token_proxy.address);
                 await this.token_logic.initialize(
-                    "1",
+                    "1", 1,
                     [this.dm_logic.address, this.sm_logic.address, this.nft_c_logic.address, this.gt_logic.address], //default Operators
                     initialSupply,
                     {from:minter_address});
@@ -453,7 +453,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_c_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
-                await this.nft_c_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.nft_c_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.nft_c_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
                 await this.nft_o_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -462,18 +462,18 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_o_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
                 await this.nft_o_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
-                await this.dm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.dm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.dm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
 
-                await this.rm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.rm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.rm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
                 await this.rm_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.sm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.sm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.sm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -485,7 +485,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.pc_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.pc_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.gt_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.gt_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -555,6 +555,16 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     id : "1",
                 });
             });
+            it('reverting on unauthorized attempt to create a project', async () => {
+                await expectRevert(this.pc_logic.createProject(
+                        other_user,
+                        "Fail project",
+                        "Production",
+                        "Script",
+                        "100",
+                        {from: minter_address})
+                    , "project: msg.sender is not approved");
+            });
             it('create successfully a project in Completed stage', async () => {
                 let txResult = await this.pc_logic.createProject(
                     other_user,
@@ -610,7 +620,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.dm_logic = await DebtManagerImplementation.at(this.dm_proxy.address);
-                await this.dm_logic.initialize("1", {from:minter_address});
+                await this.dm_logic.initialize("1", 1, {from:minter_address});
 
                 this.rm_impl = await RevenuesManagerImplementation.new({from:deployer_address});
                 this.rm_proxy = await RevenuesManagerProxy.new(
@@ -622,7 +632,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.rm_logic = await RevenuesManagerImplementation.at(this.rm_proxy.address);
-                await this.rm_logic.initialize("1", {from:minter_address});
+                await this.rm_logic.initialize("1", 1, {from:minter_address});
 
                 this.sm_impl = await StakesManagerImplementation.new({from:deployer_address});
                 this.sm_proxy = await StakesManagerProxy.new(
@@ -634,7 +644,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.sm_logic = await StakesManagerImplementation.at(this.sm_proxy.address);
-                await this.sm_logic.initialize("1", {from:minter_address});
+                await this.sm_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_c_impl = await NFTCatalogImplementation.new({from:deployer_address});
                 this.nft_c_proxy = await NFTCatalogProxy.new(
@@ -645,7 +655,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: company account - change that
                     {from:deployer_address});
                 this.nft_c_logic = await NFTCatalogImplementation.at(this.nft_c_proxy.address);
-                await this.nft_c_logic.initialize("1", {from:minter_address});
+                await this.nft_c_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_o_impl = await NFTOwnershipImplementation.new({from:deployer_address});
                 this.nft_o_proxy = await NFTOwnershipProxy.new(
@@ -655,7 +665,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_o_logic = await NFTOwnershipImplementation.at(this.nft_o_proxy.address);
-                await this.nft_o_logic.initialize("1", {from:minter_address});
+                await this.nft_o_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_t_impl = await NFT_TransactionPool_Implementation.new({from:deployer_address});
                 this.nft_t_proxy = await NFT_TransactionPoolProxy.new(
@@ -665,7 +675,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_t_logic = await NFT_TransactionPool_Implementation.at(this.nft_t_proxy.address);
-                await this.nft_t_logic.initialize("1", {from:minter_address});
+                await this.nft_t_logic.initialize("1", 1, {from:minter_address});
 
                 this.pc_impl = await ProjectCatalogImplementation.new({from:deployer_address});
                 this.pc_proxy = await ProjectCatalogProxy.new(
@@ -677,7 +687,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: project manager account - change that
                     {from:deployer_address});
                 this.pc_logic = await ProjectCatalogImplementation.at(this.pc_proxy.address);
-                await this.pc_logic.initialize("1", {from:minter_address});
+                await this.pc_logic.initialize("1", 1, {from:minter_address});
 
                 this.gt_impl = await GovernanceTokenImplementation.new({from:deployer_address});
                 this.gt_proxy = await GovernanceTokenProxy.new(
@@ -688,7 +698,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.gt_logic = await GovernanceTokenImplementation.at(this.gt_proxy.address);
-                await this.gt_logic.initialize("1", {from:minter_address});
+                await this.gt_logic.initialize("1", 1, {from:minter_address});
 
 
                 this.erc1820 = await singletons.ERC1820Registry(registryFunder);
@@ -701,7 +711,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     {from:deployer_address});
                 this.token_logic = await TokenImplementation.at(this.token_proxy.address);
                 await this.token_logic.initialize(
-                    "1",
+                    "1", 1,
                     [this.dm_logic.address, this.sm_logic.address, this.nft_c_logic.address, this.gt_logic.address], //default Operators
                     initialSupply,
                     {from:minter_address});
@@ -721,7 +731,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_c_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
-                await this.nft_c_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.nft_c_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.nft_c_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
                 await this.nft_o_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -730,18 +740,18 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_o_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
                 await this.nft_o_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
-                await this.dm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.dm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.dm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
 
-                await this.rm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.rm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.rm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
                 await this.rm_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.sm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.sm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.sm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -753,7 +763,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.pc_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.pc_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.gt_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.gt_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -836,7 +846,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.dm_logic = await DebtManagerImplementation.at(this.dm_proxy.address);
-                await this.dm_logic.initialize("1", {from:minter_address});
+                await this.dm_logic.initialize("1", 1, {from:minter_address});
 
                 this.rm_impl = await RevenuesManagerImplementation.new({from:deployer_address});
                 this.rm_proxy = await RevenuesManagerProxy.new(
@@ -848,7 +858,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.rm_logic = await RevenuesManagerImplementation.at(this.rm_proxy.address);
-                await this.rm_logic.initialize("1", {from:minter_address});
+                await this.rm_logic.initialize("1", 1, {from:minter_address});
 
                 this.sm_impl = await StakesManagerImplementation.new({from:deployer_address});
                 this.sm_proxy = await StakesManagerProxy.new(
@@ -860,7 +870,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.sm_logic = await StakesManagerImplementation.at(this.sm_proxy.address);
-                await this.sm_logic.initialize("1", {from:minter_address});
+                await this.sm_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_c_impl = await NFTCatalogImplementation.new({from:deployer_address});
                 this.nft_c_proxy = await NFTCatalogProxy.new(
@@ -871,7 +881,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: company account - change that
                     {from:deployer_address});
                 this.nft_c_logic = await NFTCatalogImplementation.at(this.nft_c_proxy.address);
-                await this.nft_c_logic.initialize("1", {from:minter_address});
+                await this.nft_c_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_o_impl = await NFTOwnershipImplementation.new({from:deployer_address});
                 this.nft_o_proxy = await NFTOwnershipProxy.new(
@@ -881,7 +891,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_o_logic = await NFTOwnershipImplementation.at(this.nft_o_proxy.address);
-                await this.nft_o_logic.initialize("1", {from:minter_address});
+                await this.nft_o_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_t_impl = await NFT_TransactionPool_Implementation.new({from:deployer_address});
                 this.nft_t_proxy = await NFT_TransactionPoolProxy.new(
@@ -891,7 +901,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_t_logic = await NFT_TransactionPool_Implementation.at(this.nft_t_proxy.address);
-                await this.nft_t_logic.initialize("1", {from:minter_address});
+                await this.nft_t_logic.initialize("1", 1, {from:minter_address});
 
                 this.pc_impl = await ProjectCatalogImplementation.new({from:deployer_address});
                 this.pc_proxy = await ProjectCatalogProxy.new(
@@ -903,7 +913,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: project manager account - change that
                     {from:deployer_address});
                 this.pc_logic = await ProjectCatalogImplementation.at(this.pc_proxy.address);
-                await this.pc_logic.initialize("1", {from:minter_address});
+                await this.pc_logic.initialize("1", 1, {from:minter_address});
 
                 this.gt_impl = await GovernanceTokenImplementation.new({from:deployer_address});
                 this.gt_proxy = await GovernanceTokenProxy.new(
@@ -914,7 +924,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.gt_logic = await GovernanceTokenImplementation.at(this.gt_proxy.address);
-                await this.gt_logic.initialize("1", {from:minter_address});
+                await this.gt_logic.initialize("1", 1, {from:minter_address});
 
 
                 this.erc1820 = await singletons.ERC1820Registry(registryFunder);
@@ -927,7 +937,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     {from:deployer_address});
                 this.token_logic = await TokenImplementation.at(this.token_proxy.address);
                 await this.token_logic.initialize(
-                    "1",
+                    "1", 1,
                     [this.dm_logic.address, this.sm_logic.address, this.nft_c_logic.address, this.gt_logic.address], //default Operators
                     initialSupply,
                     {from:minter_address});
@@ -947,7 +957,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_c_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
-                await this.nft_c_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.nft_c_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.nft_c_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
                 await this.nft_o_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -956,18 +966,18 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_o_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
                 await this.nft_o_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
-                await this.dm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.dm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.dm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
 
-                await this.rm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.rm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.rm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
                 await this.rm_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.sm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.sm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.sm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -978,7 +988,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.pc_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.pc_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.gt_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.gt_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -1064,7 +1074,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.dm_logic = await DebtManagerImplementation.at(this.dm_proxy.address);
-                await this.dm_logic.initialize("1", {from:minter_address});
+                await this.dm_logic.initialize("1", 1, {from:minter_address});
 
                 this.rm_impl = await RevenuesManagerImplementation.new({from:deployer_address});
                 this.rm_proxy = await RevenuesManagerProxy.new(
@@ -1076,7 +1086,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.rm_logic = await RevenuesManagerImplementation.at(this.rm_proxy.address);
-                await this.rm_logic.initialize("1", {from:minter_address});
+                await this.rm_logic.initialize("1", 1, {from:minter_address});
 
                 this.sm_impl = await StakesManagerImplementation.new({from:deployer_address});
                 this.sm_proxy = await StakesManagerProxy.new(
@@ -1088,7 +1098,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.sm_logic = await StakesManagerImplementation.at(this.sm_proxy.address);
-                await this.sm_logic.initialize("1", {from:minter_address});
+                await this.sm_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_c_impl = await NFTCatalogImplementation.new({from:deployer_address});
                 this.nft_c_proxy = await NFTCatalogProxy.new(
@@ -1099,7 +1109,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: company account - change that
                     {from:deployer_address});
                 this.nft_c_logic = await NFTCatalogImplementation.at(this.nft_c_proxy.address);
-                await this.nft_c_logic.initialize("1", {from:minter_address});
+                await this.nft_c_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_o_impl = await NFTOwnershipImplementation.new({from:deployer_address});
                 this.nft_o_proxy = await NFTOwnershipProxy.new(
@@ -1109,7 +1119,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_o_logic = await NFTOwnershipImplementation.at(this.nft_o_proxy.address);
-                await this.nft_o_logic.initialize("1", {from:minter_address});
+                await this.nft_o_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_t_impl = await NFT_TransactionPool_Implementation.new({from:deployer_address});
                 this.nft_t_proxy = await NFT_TransactionPoolProxy.new(
@@ -1119,7 +1129,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_t_logic = await NFT_TransactionPool_Implementation.at(this.nft_t_proxy.address);
-                await this.nft_t_logic.initialize("1", {from:minter_address});
+                await this.nft_t_logic.initialize("1", 1, {from:minter_address});
 
                 this.pc_impl = await ProjectCatalogImplementation.new({from:deployer_address});
                 this.pc_proxy = await ProjectCatalogProxy.new(
@@ -1131,7 +1141,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: project manager account - change that
                     {from:deployer_address});
                 this.pc_logic = await ProjectCatalogImplementation.at(this.pc_proxy.address);
-                await this.pc_logic.initialize("1", {from:minter_address});
+                await this.pc_logic.initialize("1", 1, {from:minter_address});
 
                 this.gt_impl = await GovernanceTokenImplementation.new({from:deployer_address});
                 this.gt_proxy = await GovernanceTokenProxy.new(
@@ -1142,7 +1152,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.gt_logic = await GovernanceTokenImplementation.at(this.gt_proxy.address);
-                await this.gt_logic.initialize("1", {from:minter_address});
+                await this.gt_logic.initialize("1", 1, {from:minter_address});
 
 
                 this.erc1820 = await singletons.ERC1820Registry(registryFunder);
@@ -1155,7 +1165,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     {from:deployer_address});
                 this.token_logic = await TokenImplementation.at(this.token_proxy.address);
                 await this.token_logic.initialize(
-                    "1",
+                    "1", 1,
                     [this.dm_logic.address, this.sm_logic.address, this.nft_c_logic.address, this.gt_logic.address], //default Operators
                     initialSupply,
                     {from:minter_address});
@@ -1174,7 +1184,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_c_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
-                await this.nft_c_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.nft_c_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.nft_c_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
                 await this.nft_o_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -1183,18 +1193,18 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_o_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
                 await this.nft_o_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
-                await this.dm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.dm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.dm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
 
-                await this.rm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.rm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.rm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
                 await this.rm_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.sm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.sm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.sm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -1205,7 +1215,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.pc_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.pc_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.gt_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.gt_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -1288,7 +1298,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.dm_logic = await DebtManagerImplementation.at(this.dm_proxy.address);
-                await this.dm_logic.initialize("1", {from:minter_address});
+                await this.dm_logic.initialize("1", 1, {from:minter_address});
 
                 this.rm_impl = await RevenuesManagerImplementation.new({from:deployer_address});
                 this.rm_proxy = await RevenuesManagerProxy.new(
@@ -1300,7 +1310,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.rm_logic = await RevenuesManagerImplementation.at(this.rm_proxy.address);
-                await this.rm_logic.initialize("1", {from:minter_address});
+                await this.rm_logic.initialize("1", 1, {from:minter_address});
 
                 this.sm_impl = await StakesManagerImplementation.new({from:deployer_address});
                 this.sm_proxy = await StakesManagerProxy.new(
@@ -1312,7 +1322,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.sm_logic = await StakesManagerImplementation.at(this.sm_proxy.address);
-                await this.sm_logic.initialize("1", {from:minter_address});
+                await this.sm_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_c_impl = await NFTCatalogImplementation.new({from:deployer_address});
                 this.nft_c_proxy = await NFTCatalogProxy.new(
@@ -1323,7 +1333,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: company account - change that
                     {from:deployer_address});
                 this.nft_c_logic = await NFTCatalogImplementation.at(this.nft_c_proxy.address);
-                await this.nft_c_logic.initialize("1", {from:minter_address});
+                await this.nft_c_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_o_impl = await NFTOwnershipImplementation.new({from:deployer_address});
                 this.nft_o_proxy = await NFTOwnershipProxy.new(
@@ -1333,7 +1343,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_o_logic = await NFTOwnershipImplementation.at(this.nft_o_proxy.address);
-                await this.nft_o_logic.initialize("1", {from:minter_address});
+                await this.nft_o_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_t_impl = await NFT_TransactionPool_Implementation.new({from:deployer_address});
                 this.nft_t_proxy = await NFT_TransactionPoolProxy.new(
@@ -1343,7 +1353,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_t_logic = await NFT_TransactionPool_Implementation.at(this.nft_t_proxy.address);
-                await this.nft_t_logic.initialize("1", {from:minter_address});
+                await this.nft_t_logic.initialize("1", 1, {from:minter_address});
 
                 this.pc_impl = await ProjectCatalogImplementation.new({from:deployer_address});
                 this.pc_proxy = await ProjectCatalogProxy.new(
@@ -1355,7 +1365,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: project manager account - change that
                     {from:deployer_address});
                 this.pc_logic = await ProjectCatalogImplementation.at(this.pc_proxy.address);
-                await this.pc_logic.initialize("1", {from:minter_address});
+                await this.pc_logic.initialize("1", 1, {from:minter_address});
 
                 this.gt_impl = await GovernanceTokenImplementation.new({from:deployer_address});
                 this.gt_proxy = await GovernanceTokenProxy.new(
@@ -1366,7 +1376,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.gt_logic = await GovernanceTokenImplementation.at(this.gt_proxy.address);
-                await this.gt_logic.initialize("1", {from:minter_address});
+                await this.gt_logic.initialize("1", 1, {from:minter_address});
 
 
                 this.erc1820 = await singletons.ERC1820Registry(registryFunder);
@@ -1379,7 +1389,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     {from:deployer_address});
                 this.token_logic = await TokenImplementation.at(this.token_proxy.address);
                 await this.token_logic.initialize(
-                    "1",
+                    "1", 1,
                     [this.dm_logic.address, this.sm_logic.address, this.nft_c_logic.address, this.gt_logic.address], //default Operators
                     initialSupply,
                     {from:minter_address});
@@ -1399,7 +1409,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_c_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
-                await this.nft_c_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.nft_c_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.nft_c_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
                 await this.nft_o_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -1408,18 +1418,18 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_o_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
                 await this.nft_o_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
-                await this.dm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.dm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.dm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
 
-                await this.rm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.rm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.rm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
                 await this.rm_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.sm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.sm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.sm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -1430,7 +1440,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.pc_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.pc_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.gt_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.gt_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -1519,7 +1529,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.dm_logic = await DebtManagerImplementation.at(this.dm_proxy.address);
-                await this.dm_logic.initialize("1", {from:minter_address});
+                await this.dm_logic.initialize("1", 1, {from:minter_address});
 
                 this.rm_impl = await RevenuesManagerImplementation.new({from:deployer_address});
                 this.rm_proxy = await RevenuesManagerProxy.new(
@@ -1531,7 +1541,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.rm_logic = await RevenuesManagerImplementation.at(this.rm_proxy.address);
-                await this.rm_logic.initialize("1", {from:minter_address});
+                await this.rm_logic.initialize("1", 1, {from:minter_address});
 
                 this.sm_impl = await StakesManagerImplementation.new({from:deployer_address});
                 this.sm_proxy = await StakesManagerProxy.new(
@@ -1543,7 +1553,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: funds manager account - change that
                     {from:deployer_address});
                 this.sm_logic = await StakesManagerImplementation.at(this.sm_proxy.address);
-                await this.sm_logic.initialize("1", {from:minter_address});
+                await this.sm_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_c_impl = await NFTCatalogImplementation.new({from:deployer_address});
                 this.nft_c_proxy = await NFTCatalogProxy.new(
@@ -1554,7 +1564,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: company account - change that
                     {from:deployer_address});
                 this.nft_c_logic = await NFTCatalogImplementation.at(this.nft_c_proxy.address);
-                await this.nft_c_logic.initialize("1", {from:minter_address});
+                await this.nft_c_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_o_impl = await NFTOwnershipImplementation.new({from:deployer_address});
                 this.nft_o_proxy = await NFTOwnershipProxy.new(
@@ -1564,7 +1574,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_o_logic = await NFTOwnershipImplementation.at(this.nft_o_proxy.address);
-                await this.nft_o_logic.initialize("1", {from:minter_address});
+                await this.nft_o_logic.initialize("1", 1, {from:minter_address});
 
                 this.nft_t_impl = await NFT_TransactionPool_Implementation.new({from:deployer_address});
                 this.nft_t_proxy = await NFT_TransactionPoolProxy.new(
@@ -1574,7 +1584,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.nft_t_logic = await NFT_TransactionPool_Implementation.at(this.nft_t_proxy.address);
-                await this.nft_t_logic.initialize("1", {from:minter_address});
+                await this.nft_t_logic.initialize("1", 1, {from:minter_address});
 
                 this.pc_impl = await ProjectCatalogImplementation.new({from:deployer_address});
                 this.pc_proxy = await ProjectCatalogProxy.new(
@@ -1586,7 +1596,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address, //todo: project manager account - change that
                     {from:deployer_address});
                 this.pc_logic = await ProjectCatalogImplementation.at(this.pc_proxy.address);
-                await this.pc_logic.initialize("1", {from:minter_address});
+                await this.pc_logic.initialize("1", 1, {from:minter_address});
 
                 this.gt_impl = await GovernanceTokenImplementation.new({from:deployer_address});
                 this.gt_proxy = await GovernanceTokenProxy.new(
@@ -1597,7 +1607,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     minter_address,
                     {from:deployer_address});
                 this.gt_logic = await GovernanceTokenImplementation.at(this.gt_proxy.address);
-                await this.gt_logic.initialize("1", {from:minter_address});
+                await this.gt_logic.initialize("1", 1, {from:minter_address});
 
 
                 this.erc1820 = await singletons.ERC1820Registry(registryFunder);
@@ -1610,7 +1620,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                     {from:deployer_address});
                 this.token_logic = await TokenImplementation.at(this.token_proxy.address);
                 await this.token_logic.initialize(
-                    "1",
+                    "1", 1,
                     [this.dm_logic.address, this.sm_logic.address, this.nft_c_logic.address, this.gt_logic.address], //default Operators
                     initialSupply,
                     {from:minter_address});
@@ -1630,7 +1640,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_c_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.nft_c_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
-                await this.nft_c_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.nft_c_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.nft_c_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
                 await this.nft_o_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -1639,18 +1649,18 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.nft_o_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
                 await this.nft_o_logic.setGovernanceToken(this.gt_logic.address, {from:minter_address});
 
-                await this.dm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.dm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.dm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.dm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
 
-                await this.rm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.rm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.rm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.rm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
                 await this.rm_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.sm_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.sm_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.sm_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.sm_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
@@ -1661,7 +1671,7 @@ contract('Project Management - BRD', ([registryFunder, deployer_address, other_u
                 await this.pc_logic.setRevenuesManager(this.rm_logic.address, {from:minter_address});
                 await this.pc_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
-                await this.gt_logic.setERC777(this.token_logic.address, {from:minter_address});
+                await this.gt_logic.setNativeToken(this.token_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
                 await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
                 await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});

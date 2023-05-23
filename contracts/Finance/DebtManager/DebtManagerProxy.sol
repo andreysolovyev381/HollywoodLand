@@ -10,11 +10,10 @@ pragma solidity >= 0.8.0;
 */
 
 import "./DebtManagerStorage.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
-contract DebtManagerProxy is ExternalDebtManagerStorage, AccessControl, TransparentUpgradeableProxy
-{
+
+contract DebtManagerProxy is ExternalDebtManagerStorage, ControlTransparentUpgradeableBlock {
     constructor(
         string memory _name,
         string memory _symbol,

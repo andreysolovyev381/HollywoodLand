@@ -4,12 +4,12 @@ pragma solidity >= 0.8.0;
 import "./TokenStorage.sol";
 import "../../Libs/ERC777Wrapper.sol";
 import "../../Libs/ExternalFuncs.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "../../Libs/InheritanceHelpers.sol";
+
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessControl, Initializable, ReentrancyGuard {
+contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, ControlBlock, AligningDataStorage, ReentrancyGuard {
     using SafeMath for uint256;
     using Address for address;
 
@@ -19,9 +19,10 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
 
     function initialize(
         string memory version,
+        uint8 version_num,
         address[] memory default_operators,
         uint256 this_impl_supply
-    ) public initializer onlyRole(MINTER_ROLE) {
+    ) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
         if (this_impl_supply != 0){
             require (
                 totalSupply().add(this_impl_supply) <= m_max_supply,
@@ -37,10 +38,6 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
 
         m_implementation_version.push(version);
 
-        // register interfaces
-        _ERC1820_REGISTRY.setInterfaceImplementer(address(this), keccak256("ERC777Token"), address(this));
-        _ERC1820_REGISTRY.setInterfaceImplementer(address(this), keccak256("ERC20Token"), address(this));
-
         //register minter_address
         setAddressRegistered(msg.sender, true);
     }
@@ -52,11 +49,11 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
     //burn and operatorBurn of ERC777 make all required checks and update _totalSupply that holds current Tokens qty
     //no need to override those funcs
 
-    //todo: DRY
+
     function getCurrentVersion () public view returns (string memory) {
         return m_implementation_version[m_implementation_version.length - 1];
     }
-    //todo: DRY
+
     function getVersionHistory () public view returns (string[] memory) {
         return m_implementation_version;
     }
@@ -89,7 +86,7 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
         require(tokens_to_sell > 0, "You need to sell at least some tokens");
 
         // Check that the user's token balance is enough to do the swap
-        uint256 user_token_balance = this.balanceOf(msg.sender);
+        uint256 user_token_balance = this.balanceOf(to); //correction of Audit Finding #2
         require(user_token_balance >= tokens_to_sell, "Your balance is lower than the amount of tokens you want to sell");
 
         uint256 eth_to_transfer = tokens_to_sell.div(getTokenPrice());
@@ -137,7 +134,7 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
      * @param amount uint256 amount of tokens to transfer
      * @param userData bytes extra information provided by the token holder (if any)
      * @param operatorData bytes extra information provided by the operator (if any)
-     * @param requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
+     * REMOVED AS A PART OF THE HOOKS requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
      */
     function _send(
         address from,
@@ -145,7 +142,7 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
         uint256 amount,
         bytes memory userData,
         bytes memory operatorData,
-        bool requireReceptionAck
+        bool //requireReceptionAck
     ) internal virtual override {
         require(from != address(0), "ERC777: send from the zero address");
         require(to != address(0), "ERC777: send to the zero address");
@@ -154,12 +151,7 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
         if (isTrialPeriod()) require (isAddressRegistered(to), "Address is not registered for Trial");
 
         address operator = _msgSender();
-
-        _callTokensToSend(operator, from, to, amount, userData, operatorData);
-
         super._move(operator, from, to, amount, userData, operatorData);
-
-        _callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
     }
 
     function _move(
@@ -206,24 +198,21 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, AccessContr
         emit Approval(holder, spender, value);
     }
 
-    //todo: for testing only, must be removed before deployment
+    //todo: THIS EVENT IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
     event BeforeTokenTransfer();
-    //todo: for testing only, must be removed before deployment
+    //todo: THIS FUNC IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
     function mintInternal(address to, uint256 amount, bytes memory userData, bytes memory operatorData) public {
         _mint(to, amount, userData, operatorData);
     }
-
-    //todo: for testing only, must be removed before deployment
+    //todo: THIS FUNC IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
     function mintInternalExtended(address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) public {
         _mint(to, amount, userData, operatorData, requireReceptionAck);
     }
-
-    //todo: for testing only, must be removed before deployment
+    //todo: THIS FUNC IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
     function approveInternal(address holder, address spender, uint256 value) public {
         _approve(holder, spender, value);
     }
-
-    //todo: for testing only, must be removed before deployment
+    //todo: THIS FUNC IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
     function _beforeTokenTransfer(address, address, address, uint256) internal override {
         emit BeforeTokenTransfer();
     }

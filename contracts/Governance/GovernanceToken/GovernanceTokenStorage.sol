@@ -12,6 +12,13 @@ import "../../Libs/IterableSet.sol";
 
 contract GovernanceToken_SpecificStorage is ProxyStorage {
 
+    //ERC20 data;
+    mapping(address => uint256) private _balances;
+    mapping(address => mapping(address => uint256)) private _allowances;
+    uint256 private _totalSupply;
+    string private _name;
+    string private _symbol;
+
     //ERC20Votes;
     struct Checkpoint {
         uint32 fromBlock;
@@ -74,7 +81,7 @@ contract GovernanceToken_SpecificStorage is ProxyStorage {
     //address -> project -> deposit
     mapping (address => mapping (uint256 => Deposit)) internal m_deposits;
 
-    event ERC777Set(address token);
+    event NativeTokenSet(address token);
     event ProjectCatalogSet(address project_catalog);
     event NFTCatalogSet(address nft_catalog);
     event NFTOwnershipSet(address nft_ownership);

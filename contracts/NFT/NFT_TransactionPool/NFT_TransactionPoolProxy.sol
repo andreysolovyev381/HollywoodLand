@@ -10,10 +10,9 @@ pragma solidity >= 0.8.0;
 */
 
 import "./NFT_TransactionPoolStorage.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
-contract NFT_TransactionPoolProxy is ExternalNFT_TransactionPoolStorage, AccessControl, TransparentUpgradeableProxy
+contract NFT_TransactionPoolProxy is ExternalNFT_TransactionPoolStorage, ControlTransparentUpgradeableBlock
 {
     constructor(
         string memory _name,

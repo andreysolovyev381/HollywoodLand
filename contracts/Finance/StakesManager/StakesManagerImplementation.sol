@@ -6,16 +6,16 @@ import "../../NFT/Libs/NFTStructs.sol";
 
 import "../../Libs/ExternalFuncs.sol";
 import "../../Libs/IterableSet.sol";
+import "../../Libs/InheritanceHelpers.sol";
+
 import "./StakesManagerStorage.sol";
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-contract StakesManagerImplementation is ExternalStakesManagerStorage, AccessControl, ReentrancyGuard, Initializable {
+contract StakesManagerImplementation is ExternalStakesManagerStorage, ControlBlock, ReentrancyGuard {
     using ExternalFuncs for *;
     using Counters for Counters.Counter;
     using SafeMath for uint256;
@@ -36,16 +36,16 @@ contract StakesManagerImplementation is ExternalStakesManagerStorage, AccessCont
         m_symbol = "DONT_USE";
     }
 
-    function initialize(string memory version) public initializer onlyRole(MINTER_ROLE) {
-        //todo: not sure this is needed, no need to send tokens directly
+    function initialize(string memory version, uint8 version_num) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
+        //no 777 in the system
 //        _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
         m_implementation_version.push(version);
     }
 
-    function setERC777 (address token) public onlyRole(MINTER_ROLE) {
+    function setNativeToken (address token) public onlyRole(MINTER_ROLE) {
         require (token != address(0), "Address should be valid");
         m_token = IERC777Wrapper(token);
-        emit ERC777Set(token);
+        emit NativeTokenSet(token);
     }
     function setProjectCatalog (address project_catalog) public onlyRole(MINTER_ROLE) {
         require (project_catalog != address(0), "Address should be valid");
@@ -74,11 +74,11 @@ contract StakesManagerImplementation is ExternalStakesManagerStorage, AccessCont
     function symbol () public view returns (string memory) {
         return m_symbol;
     }
-    //todo: DRY
+
     function getCurrentVersion () public view returns (string memory) {
         return m_implementation_version[m_implementation_version.length - 1];
     }
-    //todo: DRY
+
     function getVersionHistory () public view returns (string[] memory) {
         return m_implementation_version;
     }
@@ -103,11 +103,13 @@ contract StakesManagerImplementation is ExternalStakesManagerStorage, AccessCont
         uint256 expected_budget = hwlt_tokens.add(total_stakes);
         require(expected_budget <= total_budget, "If made your stake would exceed total Project budget");
 
+        //amended as Audit Findings #5
+        m_project_catalog.addStakes(project_id, hwlt_tokens);
+
         m_token.operatorSend(addr_from, m_company_account, hwlt_tokens, bytes(''), bytes(''));
 
         _stake(addr_from, hwlt_tokens, project_id, shares_available);
 
-        m_project_catalog.addStakes(project_id, hwlt_tokens);
     }
     function withdrawStake(address addr_for, uint256 stake_id) public nonReentrant isSetupOk {
         uint256 project_id = m_nft_catalog.getProjectOfToken(stake_id);

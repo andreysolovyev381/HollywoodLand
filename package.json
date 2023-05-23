@@ -1,37 +1,31 @@
 {
   "name": "hollywood_land",
   "version": "0.0.1",
-
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
   },
-
   "scripts": {
     "test": "truffle test",
     "test:polygon": "truffle test --config=truffle-config.polygon.js --network=$npm_config_network",
     "compile:polygon": "truffle compile --config=truffle-config.polygon.js",
     "migrate:polygon": "truffle migrate --config=truffle-config.polygon.js --network=$npm_config_network"
   },
-
   "devDependencies": {
     "@maticnetwork/maticjs": "^2.0.40",
     "@truffle/hdwallet-provider": "^1.4.2",
     "dotenv": "^9.0.0"
   },
-
   "dependencies": {
-    "@openzeppelin/contracts": "^4.7.0",
-    "@openzeppelin/contracts-upgradeable": "^4.7.0",
+    "@openzeppelin/contracts": "^4.8.3",
+    "@openzeppelin/contracts-upgradeable": "^4.8.3",
     "@openzeppelin/test-helpers": "^0.5.15",
     "abdk-libraries-solidity": "^3.0.0",
     "chai": "^4.3.6",
     "eth-gas-reporter": "^0.2.25",
     "eth-revert-reason": "^1.0.3",
-    "eth-sig-util": "^3.0.1",
     "ethereumjs-abi": "^0.6.8",
-    "ethereumjs-util": "^7.1.5",
-    "ethereumjs-wallet": "^1.0.2",
+    "keccak256": "^1.0.6",
     "web3": "^1.7.3",
     "web3-eth": "^1.7.3"
   }

@@ -4,13 +4,12 @@ pragma solidity >=0.8.0;
 import "./NFT_TransactionPoolStorage.sol";
 import "../Libs/NFTStructs.sol";
 import "../Libs/NFT_Helpers.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 
-contract NFT_TransactionPool_Implementation is ExternalNFT_TransactionPoolStorage, AccessControl, Initializable {
+contract NFT_TransactionPool_Implementation is ExternalNFT_TransactionPoolStorage, ControlBlock {
     using Counters for Counters.Counter;
     using SafeMath for uint256;
 
@@ -31,7 +30,7 @@ contract NFT_TransactionPool_Implementation is ExternalNFT_TransactionPoolStorag
         m_name = "Part of NFT Catalog Implementation, not for usage";
         m_symbol = "DONT_USE";
     }
-    function initialize(string memory version) public initializer onlyRole(MINTER_ROLE) {
+    function initialize(string memory version, uint8 version_num) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
         m_implementation_version.push(version);
     }
     function name() public view returns (string memory) {
@@ -40,11 +39,11 @@ contract NFT_TransactionPool_Implementation is ExternalNFT_TransactionPoolStorag
     function symbol() public view returns (string memory) {
         return m_symbol;
     }
-    //todo: DRY
+
     function getCurrentVersion () public view returns (string memory) {
         return m_implementation_version[m_implementation_version.length - 1];
     }
-    //todo: DRY
+
     function getVersionHistory () public view returns (string[] memory) {
         return m_implementation_version;
     }

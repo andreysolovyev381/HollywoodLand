@@ -304,11 +304,6 @@ function shouldBurnTokens (from, operator, amount, data, operatorData) {
 }
 
 function shouldBehaveLikeERC777InternalMint (recipient, operator, amount, data, operatorData) {
-    // beforeEach(async function () {
-    //     await this.token.setAddressRegistered(recipient, true, {from: this.sender});
-    //     await this.token.setAddressRegistered(operator, true, {from: this.sender});
-    // });
-
     shouldInternalMintTokens(operator, recipient, new BN('0'), data, operatorData);
     shouldInternalMintTokens(operator, recipient, amount, data, operatorData);
 
@@ -355,32 +350,25 @@ function shouldInternalMintTokens (operator, to, amount, data, operatorData) {
 
 function shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook (operator, amount, data, operatorData) {
 
-    context('when TokensRecipient reverts', function () {
+    context('when TokensRecipient DOESN\'T revert despite of Hook Callee reverting', function () {
         beforeEach(async function () {
             await this.tokensRecipientImplementer.setShouldRevertReceive(true);
             await this.token.setAddressRegistered(operator, true, {from: this.sender});
+            await this.token.setAddressRegistered(this.recipient, true, {from: this.sender});
         });
 
-        it('send reverts', async function () {
-            await expectRevert(sendFromHolder(this.token, this.sender, this.recipient, amount, data), 'revert');
+        it('send DOESN\'T revert', async function () {
+            await sendFromHolder(this.token, this.sender, this.recipient, amount, data);
         });
 
-        it('operatorSend reverts', async function () {
-            await expectRevert(
-                this.token.operatorSend(this.sender, this.recipient, amount, data, operatorData, { from: operator })
-                , 'revert'
-            );
+        it('operatorSend DOESN\'T revert', async function () {
+            await this.token.operatorSend(this.sender, this.recipient, amount, data, operatorData, { from: operator });
         });
 
-        //todo: don't have any minting requirements will keep it for later - no such func adn mintInternal()
-        it('mint (internal) reverts', async function () {
-            /*
-            await expectRevert(
-                this.token.mintInternal(operator, this.recipient, amount, data, operatorData)
-                , 'revert'
-            );
-             */
-        });
+        //test removed along with the func from the contract
+        // it('mint (internal) DOESN\'T revert', async function () {
+        //     await this.token.mintInternal(operator, this.recipient, amount, data, operatorData);
+        // });
     });
 
     context('when TokensRecipient does not revert', function () {
@@ -432,65 +420,54 @@ function shouldBehaveLikeERC777SendBurnMintInternalWithReceiveHook (operator, am
                 postRecipientBalance,
             );
         });
+        //commented out as testing func was removed fom the contract
+        /*
+    it('TokensRecipient receives mint (internal) data and is called after state mutation', async function () {
+        const { tx } = await this.token.mintInternal(
+            operator, this.recipient, amount, data, operatorData,
+        );
 
-        it('TokensRecipient receives mint (internal) data and is called after state mutation', async function () {
-            //todo: don't have any minting requirements will keep it for later - no such func adn mintInternal()
+        const postRecipientBalance = await this.token.balanceOf(this.recipient);
 
-            /*
-            const { tx } = await this.token.mintInternal(
-                operator, this.recipient, amount, data, operatorData,
-            );
-
-            const postRecipientBalance = await this.token.balanceOf(this.recipient);
-
-            await assertTokensReceivedCalled(
-                this.token,
-                tx,
-                operator,
-                ZERO_ADDRESS,
-                this.recipient,
-                amount,
-                data,
-                operatorData,
-                new BN('0'),
-                postRecipientBalance,
-            );
-            */
-
+        await assertTokensReceivedCalled(
+            this.token,
+            tx,
+            operator,
+            ZERO_ADDRESS,
+            this.recipient,
+            amount,
+            data,
+            operatorData,
+            new BN('0'),
+            postRecipientBalance,
+        );
         });
+        */
     });
 }
 
 function shouldBehaveLikeERC777SendBurnWithSendHook (operator, amount, data, operatorData) {
-    beforeEach(async function () {
-        await this.token.setAddressRegistered(operator, true, {from: operator});
-    });
-
-    context('when TokensSender reverts', function () {
+    context('when TokensSender DOESN\'T revert despite of Hook Callee reverting', function () {
         beforeEach(async function () {
             await this.tokensSenderImplementer.setShouldRevertSend(true);
+            await this.token.setAddressRegistered(operator, true, {from: this.sender});
+            await this.token.setAddressRegistered(this.recipient, true, {from: this.sender});
         });
 
-        it('send reverts', async function () {
-            await expectRevert(sendFromHolder(this.token, this.sender, this.recipient, amount, data), 'revert');
+        it('send DOESN\'T revert', async function () {
+            await sendFromHolder(this.token, this.sender, this.recipient, amount, data);
         });
 
-        it('operatorSend reverts', async function () {
-            await expectRevert(
-                this.token.operatorSend(this.sender, this.recipient, amount, data, operatorData, { from: operator })
-                , 'revert'
-            );
+        it('operatorSend DOESN\'T revert', async function () {
+            await this.token.operatorSend(this.sender, this.recipient, amount, data, operatorData, { from: operator });
         });
 
-        it('burn reverts', async function () {
-            await expectRevert(burnFromHolder(this.token, this.sender, amount, data), 'revert');
+        it('burn DOESN\'T revert', async function () {
+            await burnFromHolder(this.token, this.sender, amount, data);
         });
 
-        it('operatorBurn reverts', async function () {
-            await expectRevert(
-                this.token.operatorBurn(this.sender, amount, data, operatorData, { from: operator })
-                , 'revert'
-            );
+        it('operatorBurn DOESN\'T revert', async function () {
+            await this.token.operatorBurn(this.sender, amount, data, operatorData, { from: operator });
         });
     });
 
@@ -577,14 +554,14 @@ function removeBalance (holder) {
 
 async function assertTokensReceivedCalled (token, txHash, operator, from, to, amount, data, operatorData, fromBalance,
                                            toBalance = '0') {
-    await expectEvent.inTransaction(txHash, ERC777SenderRecipientMock, 'TokensReceivedCalled', {
+    await expectEvent.notEmitted.inTransaction(txHash, ERC777SenderRecipientMock, 'TokensReceivedCalled', {
         operator, from, to, amount, data, operatorData, token: token.address, fromBalance, toBalance,
     });
 }
 
 async function assertTokensToSendCalled (token, txHash, operator, from, to, amount, data, operatorData, fromBalance,
                                          toBalance = '0') {
-    await expectEvent.inTransaction(txHash, ERC777SenderRecipientMock, 'TokensToSendCalled', {
+    await expectEvent.notEmitted.inTransaction(txHash, ERC777SenderRecipientMock, 'TokensToSendCalled', {
         operator, from, to, amount, data, operatorData, token: token.address, fromBalance, toBalance,
     });
 }

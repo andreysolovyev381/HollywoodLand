@@ -10,11 +10,9 @@ pragma solidity >= 0.8.0;
 */
 
 import "./GovernanceTokenStorage.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
-contract GovernanceTokenProxy is ExternalGovernanceTokenStorage, ERC20Permit, AccessControl, TransparentUpgradeableProxy
+contract GovernanceTokenProxy is ExternalGovernanceTokenStorage, ControlTransparentUpgradeableBlock
 {
     constructor(
         string memory _name,
@@ -24,9 +22,10 @@ contract GovernanceTokenProxy is ExternalGovernanceTokenStorage, ERC20Permit, Ac
         address _minter_address,
         address _company_account
     )
-    ERC20(_name, _symbol) //name, symbol
-    ERC20Permit(_name)
-        TransparentUpgradeableProxy(_logic_implementation, _admin_address, bytes('')) {
+
+
+    TransparentUpgradeableProxy(_logic_implementation, _admin_address, bytes(''))
+    {
         _grantRole(DEFAULT_ADMIN_ROLE, _admin_address);
         _grantRole(MINTER_ROLE, _minter_address);
 

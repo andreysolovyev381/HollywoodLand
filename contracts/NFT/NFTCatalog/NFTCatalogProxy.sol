@@ -10,11 +10,9 @@ pragma solidity >= 0.8.0;
 */
 
 import "./NFTCatalogStorage.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-
-contract NFTCatalogProxy is ExternalNFTCatalogStorage, AccessControl, TransparentUpgradeableProxy
+contract NFTCatalogProxy is ExternalNFTCatalogStorage, ControlTransparentUpgradeableBlock
 {
     constructor(
         string memory name,

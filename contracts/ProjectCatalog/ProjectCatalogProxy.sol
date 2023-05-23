@@ -10,10 +10,9 @@ pragma solidity >= 0.8.0;
 */
 
 import "./ProjectCatalogStorage.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "../Libs/InheritanceHelpers.sol";
 
-contract ProjectCatalogProxy is ExternalProjectCatalogStorage, AccessControl, TransparentUpgradeableProxy
+contract ProjectCatalogProxy is ExternalProjectCatalogStorage, ControlTransparentUpgradeableBlock
 {
     constructor(
         string memory _name,

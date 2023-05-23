@@ -10,10 +10,9 @@ pragma solidity >= 0.8.0;
 */
 
 import "./NFTOwnershipStorage.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
-contract NFTOwnershipProxy is ExternalNFTOwnershipStorage, AccessControl, TransparentUpgradeableProxy
+contract NFTOwnershipProxy is ExternalNFTOwnershipStorage, ControlTransparentUpgradeableBlock
 {
     constructor(
         string memory _name,

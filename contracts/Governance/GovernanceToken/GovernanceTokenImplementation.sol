@@ -10,23 +10,17 @@ pragma solidity >=0.8.0;
 
 import "./GovernanceTokenStorage.sol";
 import "../../NFT/Libs/NFTStructs.sol";
-
-import "../../Libs/ERC777_SenderRecipient.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 
-//todo: consider deleting ERC20Permit from inheritance DAG
-
-
-contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, ERC20Permit, AccessControl, Initializable, ERC777SenderRecipientMock {
+contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, ControlBlock, AligningDataStorage, ERC20Permit {
     using SafeMath for uint256;
 
     modifier isSetupOk() {
@@ -42,15 +36,18 @@ contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, ERC20P
     }
 
     constructor()
-    ERC20("Governance Token Implementation, not for use", "DONT_USE") //name, symbol
-    ERC20Permit("Governance Token Implementation, not for use")
-    {}
+    ERC20("Governance Token Implementation, not for usage", "DONT_USE") //name, symbol
+    ERC20Permit("Governance Token Implementation, not for usage")
+    {
+    m_name = "Governance Token Implementation, not for usage";
+    m_symbol = "DONT_USE";
+    }
 
-    function initialize(string memory version) public initializer onlyRole(MINTER_ROLE) {
+    function initialize(string memory version, uint8 version_num) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
         m_implementation_version.push(version);
     }
-    //name()
-    //symbol()
+    function name() public view virtual override returns (string memory) { return m_name; }
+    function symbol() public view virtual override returns (string memory) { return m_symbol; }
     function getCurrentVersion () public view returns (string memory) {
         return m_implementation_version[m_implementation_version.length - 1];
     }
@@ -59,10 +56,10 @@ contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, ERC20P
     }
 
 
-    function setERC777 (address token) public onlyRole(MINTER_ROLE) {
+    function setNativeToken (address token) public onlyRole(MINTER_ROLE) {
         require (token != address(0), "Address should be valid");
         m_token = IERC777Wrapper(token);
-        emit ERC777Set(token);
+        emit NativeTokenSet(token);
     }
     function setNFTCatalog (address nft_catalog) public onlyRole(MINTER_ROLE) {
         require (nft_catalog != address(0), "Address should be valid");
@@ -89,46 +86,11 @@ contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, ERC20P
         return address(this);
     }
 
-    /// these funcs are from ERCWrapper @OZ contracts/token/ERC20/extensions/ERC20Wrapper.sol
-
-    /**
-     * @dev Allow a user to deposit underlying tokens and mint the corresponding number of wrapped tokens.
-     */
-    /**
-    function depositFor(address account, uint256 amount) public virtual returns (bool) {
-        SafeERC20.safeTransferFrom(m_token, _msgSender(), address(this), amount);
-        _mint(account, amount);
-        return true;
-    }
-    */
-    /**
-     * @dev Allow a user to burn a number of wrapped tokens and withdraw the corresponding number of underlying tokens.
-     */
-    /**
-    function withdrawTo(address account, uint256 amount) public virtual returns (bool) {
-        _burn(_msgSender(), amount);
-        SafeERC20.safeTransfer(m_token, account, amount);
-        return true;
-    }
-    */
-
-    /**
-     * @dev Mint wrapped token to cover any underlyingTokens that would have been transferred by mistake. Internal
-     * function that can be exposed with access control if desired.
-     */
-    /**
-    function _recover(address account) internal virtual returns (uint256) {
-        uint256 value = m_token.balanceOf(address(this)) - totalSupply();
-        _mint(account, value);
-        return value;
-    }
-    */
-
     function depositTokens(address account, uint256 amount, uint256 project_id) public isSetupOk returns (bool) {
         if (project_id != COMMON_ISSUES_UID){
             NFTStructs.NFT memory project = m_nft_catalog.getNFT(project_id);
             require (project._type == NFTStructs.NftType.Project, "Can't deposit for a non-Project");
-            require (m_project_catalog.projectExists(project_id));
+            require (m_project_catalog.projectExists(project_id), "No such a project in Project catalog");
         }
         require (m_token.isOperatorFor(msg.sender, account), "Sender is not an operator for the account");
         m_token.operatorSend(account, m_company_account, amount, '', '');
@@ -387,7 +349,7 @@ contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, ERC20P
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public virtual {
+    ) public virtual { //todo: OVERRIDE?
         require(block.timestamp <= expiry, "ERC20Votes: signature expired");
         address signer = ECDSA.recover(
             _hashTypedDataV4(keccak256(abi.encode(_DELEGATION_TYPEHASH, delegatee, nonce, expiry))),
@@ -448,28 +410,21 @@ contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, ERC20P
         return a - b;
     }
 
-
     /**
-    * @dev Move voting power when tokens are transferred.
+     * @dev Overriding ERC20 features.
      *
-     * Emits a {DelegateVotesChanged} event.
+     * Restricting tokens move.
      */
-
-    /**
-     * UNCLEAR IT IS NEEDED AT LL.
-     */
-
-    /**
-        function _afterTokenTransfer(
-            address from,
-            address to,
-            uint256 amount
-        ) internal virtual override {
-            super._afterTokenTransfer(from, to, amount);
-
-            _moveVotingPower(delegates(from), delegates(to), amount);
-        }
-    */
+    function throwException () internal pure returns (bool) {
+        require (false, "Governance Tokens can be delegated only");
+        return false;
+    }
+    function transfer(address, uint256) public virtual override returns (bool) {return throwException ();}
+    function transferFrom(address, address, uint256) public virtual override returns (bool)  {return throwException ();}
+    function allowance(address, address) public view virtual override returns (uint256)  {throwException (); return 0;}
+    function approve(address, uint256) public virtual override returns (bool)  {return throwException ();}
+    function increaseAllowance(address, uint256) public virtual override returns (bool)  {return throwException ();}
+    function decreaseAllowance(address, uint256) public virtual override returns (bool)  {return throwException ();}
 }
 
 

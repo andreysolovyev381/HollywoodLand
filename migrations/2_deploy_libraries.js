@@ -1,8 +1,6 @@
 const {singletons } = require('@openzeppelin/test-helpers');
 require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
 
-//todo: must be updated before test- or mainnet deployment, the second implementations should be removed
-
 const TokenImplementation = artifacts.require('TokenImplementation');
 const NFTCatalogImplementation = artifacts.require('NFTCatalogImplementation');
 const NFTOwnershipImplementation = artifacts.require('NFTOwnershipImplementation');

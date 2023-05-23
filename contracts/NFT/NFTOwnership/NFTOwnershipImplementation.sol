@@ -4,13 +4,12 @@ pragma solidity >=0.8.0;
 import "./NFTOwnershipStorage.sol";
 import "../Libs/NFTStructs.sol";
 import "../../Libs/ExternalFuncs.sol";
+import "../../Libs/InheritanceHelpers.sol";
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 
-contract NFTOwnershipImplementation is ExternalNFTOwnershipStorage, AccessControl, Initializable {
+contract NFTOwnershipImplementation is ExternalNFTOwnershipStorage, ControlBlock {
     using SafeMath for uint256;
 
     modifier isSetupOk() {
@@ -34,10 +33,10 @@ contract NFTOwnershipImplementation is ExternalNFTOwnershipStorage, AccessContro
         _;
     }
     constructor() {
-        m_name = "Project Catalog Implementation, not for usage";
+        m_name = "Part of NFT Catalog Implementation, not for usage";
         m_symbol = "DONT_USE";
     }
-    function initialize(string memory version) public initializer onlyRole(MINTER_ROLE) {
+    function initialize(string memory version, uint8 version_num) public reinitializer(version_num) onlyRole(MINTER_ROLE) {
         m_implementation_version.push(version);
     }
     function name() public view returns (string memory) {
@@ -46,11 +45,11 @@ contract NFTOwnershipImplementation is ExternalNFTOwnershipStorage, AccessContro
     function symbol() public view returns (string memory) {
         return m_symbol;
     }
-    //todo: DRY
+
     function getCurrentVersion () public view returns (string memory) {
         return m_implementation_version[m_implementation_version.length - 1];
     }
-    //todo: DRY
+
     function getVersionHistory () public view returns (string[] memory) {
         return m_implementation_version;
     }
@@ -293,7 +292,7 @@ contract NFTOwnershipImplementation is ExternalNFTOwnershipStorage, AccessContro
 
         emit ApprovedOperatorForNFT(msg.sender, to, nft_id);
     }
-    //todo: DRY
+
     function revokeOperatorForNFT(address to, uint256 nft_id) public {
         require(isOwner(msg.sender, nft_id), "only owner can revoke operator");
         require(m_approvals_for_nft_operators[msg.sender][nft_id]._operator_inserted[to], "not an operator for this NFT");
@@ -322,7 +321,7 @@ contract NFTOwnershipImplementation is ExternalNFTOwnershipStorage, AccessContro
             IterableSet.insert(m_owner_to_nfts[owner], nft_id);
         }
     }
-    //todo: DRY
+
     function removeOwner (address owner, uint256 nft_id) private {
         if (m_nft_ownership[nft_id]._owner_inserted[owner]) {
 

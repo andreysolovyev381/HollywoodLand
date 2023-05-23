@@ -36,7 +36,7 @@ contract StakesManager_SpecificStorage is ProxyStorage {
     mapping(uint256 => uint256) internal m_stake_to_tokens;
 
     //Events
-    event ERC777Set(address token);
+    event NativeTokenSet(address token);
     event ProjectCatalogSet(address project_catalog);
     event CompanyAccountSet(address company_account);
     event NFTCatalogSet(address nft_catalog);
