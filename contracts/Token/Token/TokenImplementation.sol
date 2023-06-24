@@ -197,23 +197,4 @@ contract TokenImplementation is ExternalTokenStorage, ERC777Wrapper, ControlBloc
         _allowances[holder][spender] = value;
         emit Approval(holder, spender, value);
     }
-
-    //todo: THIS EVENT IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
-    event BeforeTokenTransfer();
-    //todo: THIS FUNC IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
-    function mintInternal(address to, uint256 amount, bytes memory userData, bytes memory operatorData) public {
-        _mint(to, amount, userData, operatorData);
-    }
-    //todo: THIS FUNC IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
-    function mintInternalExtended(address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) public {
-        _mint(to, amount, userData, operatorData, requireReceptionAck);
-    }
-    //todo: THIS FUNC IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
-    function approveInternal(address holder, address spender, uint256 value) public {
-        _approve(holder, spender, value);
-    }
-    //todo: THIS FUNC IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
-    function _beforeTokenTransfer(address, address, address, uint256) internal override {
-        emit BeforeTokenTransfer();
-    }
 }

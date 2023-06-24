@@ -287,22 +287,4 @@ contract DebtManagerImplementation is ExternalDebtManagerStorage, ControlBlock {
         m_individual_debts[project_id][debt_id]._exists = false;
         IterableSet.erase(m_project_debts[project_id]._individual_debts, debt_id);
     }
-
-    //todo: THIS FUNC IS FOR TESTING PURPOSES ONLY. MUST BE DELETED BEFORE DEPLOYMENT
-    function addIndividualDebtInterestPeriod (
-        uint256 project_id,
-        uint256 debt_id,
-        uint256 apy_rate,
-        uint256 timestamp_start,
-        uint256 timestamp_finish
-    ) public isSetupOk onlyRole(FUNDS_MANAGER_ROLE) {
-        require (m_individual_debts[project_id][debt_id]._exists, "No such debt");
-
-        Interest memory _interest;
-        _interest._apy_rate = apy_rate;
-        _interest._timestamp_start = timestamp_start / 1 days;
-        _interest._timestamp_finish = timestamp_finish / 1 days;
-        _interest._is_paid = false;
-        m_individual_debts[project_id][debt_id]._interest.push(_interest);
-    }
 }
