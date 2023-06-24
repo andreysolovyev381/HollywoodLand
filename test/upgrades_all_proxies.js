@@ -28,6 +28,9 @@ const GovernanceTokenImplementation = artifacts.require('GovernanceTokenImplemen
 const GovernorProxy = artifacts.require('GovernorProxy');
 const GovernorImplementation = artifacts.require('GovernorImplementation');
 
+const ProxyTestingMock = artifacts.require('ProxyTestingMock');
+
+
 contract('Checking upgrades', (
     [
         registryFunder
@@ -213,7 +216,7 @@ contract('Checking upgrades', (
             initialSupply,
             {from:minter_address});
         this.impl1_another = await TokenImplementation.new({from:deployer_address});
-        
+        this.proxy_impl_mock = await ProxyTestingMock.new({from:deployer_address});
     });
 
     it('Debt Manager: revert by proxy on unauthorized attempt to get an implementation', async () => {
@@ -637,4 +640,31 @@ contract('Checking upgrades', (
         expect(curr_impl_ver).to.be.equal("2 moonlight");
     });
 
+    it('Token as an example: checking that another implementation works', async () => {
+        let curr_impl = await this.token_proxy.implementation({from: admin_address});
+        expect(curr_impl).to.be.equal(this.impl1_another.address);
+
+        expectEvent(
+            await this.token_proxy.upgradeTo(this.proxy_impl_mock.address, {from: admin_address}),
+            'Upgraded',
+            {
+                implementation: this.proxy_impl_mock.address
+            },
+        );
+
+        curr_impl  = await this.token_proxy.implementation({from: admin_address});
+        expect(curr_impl).to.be.equal(this.proxy_impl_mock.address);
+        this.proxy_impl_mock_logic = await ProxyTestingMock.at(this.token_proxy.address);
+    });
+    it('Token as an example: call Implementation specific func', async () => {
+        const test_str = await this.proxy_impl_mock_logic.proxyTesting({from: other_user});
+        expect(test_str).to.be.equal("For testing Proxy only");
+    });
+    // it('Token as an example: revert Proxy admin call', async () => {
+    //     expectRevert.unspecified(await this.proxy_impl_mock_logic.proxyTesting({from: admin_address}));
+    // });
+    it('Token as an example: revert on call of absent Implementation specific func', async () => {
+        console.log("If uncommented then appropriately fails with \"TypeError: this.proxy_impl_mock_logic.name is not a function\"");
+        // expectRevert.unspecified(await this.proxy_impl_mock_logic.name({from: other_user}));
+    });
 });

@@ -32,7 +32,7 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1) ) + min;
 }
 
-contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user, admin_address, minter_address, digital_investor]) => {
+contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user, admin_address, minter_address, digital_investor, operator]) => {
 
     const initialSupply = new BN('10000000000000000000000');
     const maxSupply     = new BN('20000000000000000000000');
@@ -386,7 +386,6 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     "www.google.com",
                     0,
                     0,
-                    0,
                     100, {from: other_user})
                 , "Setup is not ok");
         });
@@ -480,20 +479,26 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
         });
 
         it('Catalog check that setup is complete', async () => {
-            const txResult = await this.nft_c_logic.mint(
+            let txResult = await this.pc_logic.createProject(
+                other_user,
+                "Test project",
+                "Production",
+                "Stream",
+                "100",
+                {from: other_user});
+            txResult = await this.nft_c_logic.mint(
                 other_user,
                 "Ticket",
                 "www.google.com",
-                0,
-                0,
-                0,
-                100, {from: other_user});
+                "0",
+                "1",
+                "100", {from: other_user});
             const {logs} = txResult;
             expectEvent.inLogs(logs, 'NFTMinted', {
                 by: other_user,
-                project_id: "0",
+                project_id: "1",
                 collection_id: "0",
-                nft_id: "1"
+                nft_id: "2"
             });
         });
     });
@@ -672,7 +677,6 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     "0",
                     "0",
                     "100",
-                    "100",
                     {from: other_user})
                 , "Invalid nft_type, check getNftTypes() entrypoint");
         });
@@ -682,7 +686,6 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     other_user,
                     "Project",
                     "www.google.com",
-                    0,
                     0,
                     0,
                     100, {from: other_user})
@@ -724,7 +727,6 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     "www.google.com",
                     0,
                     0,
-                    100,
                     100, {from: other_user})
                 , "use Stakes Manager");
         });
@@ -847,7 +849,6 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     "www.google.com",
                     0,
                     0,
-                    100,
                     100, {from: other_user})
                 , "use Debt Manager");
         });
@@ -942,10 +943,9 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     "Collection",
                     "www.google.com",
                     "0",
-                    "0",
+                    "6",
                     "100",
-                    "100",
-                    {from: deployer_address})
+                    {from: digital_investor})
                 , "not approved operator");
         });
         it('Collection reverting on non-existing Project', async () => {
@@ -955,7 +955,6 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     "www.google.com",
                     "0",
                     "42",
-                    "100",
                     "100",
                     {from: other_user})
                 , " Non-existing Project, zero to skip");
@@ -967,25 +966,34 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     "www.google.com",
                     "0",
                     "0",
-                    "100",
                     "0",
                     {from: other_user})
                 , "Shares can't be 0");
         });
-        it('Collection successfully creating for User 1 for No Project', async () => {
+        it('Collection reverting on NON-project owner', async () => {
+            await expectRevert(this.nft_c_logic.mint(
+                    other_user,
+                    "Collection",
+                    "www.google.com",
+                    "0",
+                    "1",
+                    "100",
+                    {from: digital_investor})
+                , "Only project owner can mint Collection");
+        });
+        it('Collection successfully creating for User 1 for Project 1', async () => {
             let txResult = await this.nft_c_logic.mint(
                 other_user,
                 "Collection",
                 "www.google.com",
                 "0",
-                "0",
-                "100",
+                "1",
                 "100",
                 {from: other_user});
             const {logs} = txResult;
             expectEvent.inLogs(logs, 'NFTMinted', {
                 by: other_user,
-                project_id: "0",
+                project_id: "1",
                 collection_id : "0",
                 nft_id: "7",
                 nft_type: "Collection"
@@ -1002,18 +1010,16 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     "7",
                     "0",
                     "100",
-                    "100",
                     {from: other_user})
                 , "Collection can't be minted for Collection");
         });
-        it('Collection successfully creating for User 2 for Existing Project', async () => {
+        it('Collection successfully creating for User 2 for Project 2', async () => {
             let txResult = await this.nft_c_logic.mint(
                 digital_investor,
                 "Collection",
                 "www.google.com",
                 "0",
                 "6",
-                "100",
                 "100",
                 {from: digital_investor});
             const {logs} = txResult;
@@ -1033,53 +1039,24 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
         let idx_of_nft = 8;
         for (; idx_of_type !== types.length; ++idx_of_type) {
             let type = types[idx_of_type];
-            if (type == "ProjectArt") {
-                it(type + ' reverting on unauthorized attempt of creating by a project NON-onwer', async () => {
-                    await expectRevert(this.nft_c_logic.mint(
-                            other_user,
-                            type,
-                            "www.google.com",
-                            "0",
-                            "6",
-                            "100",
-                            "100",
-                            {from: deployer_address})
-                        , "Only project owner can mint Project Art");
-                });
-                it(type + ' reverting on unauthorized attempt of creating by a NON-operator', async () => {
-                    await expectRevert(this.nft_c_logic.mint(
-                            other_user,
-                            type,
-                            "www.google.com",
-                            "0",
-                            "6",
-                            "100",
-                            "100",
-                            {from: digital_investor})
-                        , "not approved operator");
-                });
-            } else {
-                it(type + ' reverting on unauthorized attempt of creating', async () => {
-                    await expectRevert(this.nft_c_logic.mint(
-                            other_user,
-                            type,
-                            "www.google.com",
-                            "0",
-                            "0",
-                            "100",
-                            "100",
-                            {from: deployer_address})
-                        , "not approved operator");
-                });
-            }
+            it(type + ' reverting on unauthorized attempt of creating by a project NON-onwer', async () => {
+                await expectRevert(this.nft_c_logic.mint(
+                        other_user,
+                        type,
+                        "www.google.com",
+                        "0",
+                        "6",
+                        "100",
+                        {from: deployer_address})
+                    , "Only project owner can mint " + type);
+            });
             it(type + ' reverting on zero shares', async () => {
                 await expectRevert(this.nft_c_logic.mint(
                         other_user,
                         type,
                         "www.google.com",
                         "0",
-                        "0",
-                        "100",
+                        "1",
                         "0",
                         {from: other_user})
                     , "Shares can't be 0");
@@ -1092,7 +1069,6 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                         "42",
                         "0",
                         "100",
-                        "100",
                         {from: other_user})
                     , "Non-existing Collection, zero to skip");
             });
@@ -1103,7 +1079,6 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                         "www.google.com",
                         "0",
                         "42",
-                        "100",
                         "100",
                         {from: other_user})
                     , "Non-existing Project, zero to skip");
@@ -1116,12 +1091,10 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                         "7",
                         "6",
                         "100",
-                        "100",
                         {from: other_user})
                     , "Collection is not in the Project");
             });
-            it(type + ' successfully creating for User 1 for No Project No Collection (except ProjectArt)', async () => {
-                const project_id = type === "ProjectArt" ? "1" : "0";
+            it(type + ' successfully creating for User 1 for Project 1 for No Collection', async () => {
                 ++idx_of_nft;
                 const nft_id_str = idx_of_nft.toString();
                 let txResult = await this.nft_c_logic.mint(
@@ -1129,14 +1102,13 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     type,
                     "www.google.com",
                     "0",
-                    project_id,
-                    "100",
+                    "1",
                     "100",
                     {from: other_user});
                 const {logs} = txResult;
                 expectEvent.inLogs(logs, 'NFTMinted', {
                     by: other_user,
-                    project_id: project_id,
+                    project_id: "1",
                     collection_id : "0",
                     nft_id: nft_id_str,
                     nft_type: type
@@ -1146,8 +1118,7 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                 const nft_id_str = idx_of_nft.toString();
                 expect (await this.nft_o_logic.isOwner(other_user, nft_id_str)).to.be.true;
             });
-            it(type + ' successfully creating for User 2 for Existing Project No Collection', async () => {
-                const project_id = type === "ProjectArt" ? "6" : "1";
+            it(type + ' successfully creating for User 2 for Project 2 for No Collection', async () => {
                 ++idx_of_nft;
                 const nft_id_str = idx_of_nft.toString();
                 let txResult = await this.nft_c_logic.mint(
@@ -1155,14 +1126,13 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     type,
                     "www.google.com",
                     "0",
-                    project_id,
-                    "100",
+                    "6",
                     "100",
                     {from: digital_investor});
                 const {logs} = txResult;
                 expectEvent.inLogs(logs, 'NFTMinted', {
                     by: digital_investor,
-                    project_id: project_id,
+                    project_id: "6",
                     collection_id : "0",
                     nft_id: nft_id_str,
                     nft_type: type
@@ -1181,7 +1151,6 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
                     "www.google.com",
                     "8",
                     "6",
-                    "100",
                     "100",
                     {from: digital_investor});
                 const {logs} = txResult;
@@ -1391,10 +1360,10 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
             await this.sm_logic.stake(other_user, "900", "1", SHARES_TOTAL.toString(), {from: other_user});
             await this.dm_logic.registerDebt(other_user, "1", "100", "10", SHARES_TOTAL.toString(), {from: minter_address});
 
-            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", "0", "0", SHARES_TOTAL.toString(), {from: other_user});
-            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", "0", "1", "0", SHARES_TOTAL.toString(), {from: other_user});
-            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", "0", "1", "0", SHARES_TOTAL.toString(), {from: other_user});
-            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "4", "0",  "0", SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", "0", "1",SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "4", "1", SHARES_TOTAL.toString(), {from: other_user});
         });
 
         it('pre-test ownership confirmation for User 1', async () => {
@@ -2037,28 +2006,28 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
         it('checking Collection status', async () => {
             expect(await this.nft_c_logic.isNoNft("4", {from: other_user})).to.be.true;
             expect(await this.nft_c_logic.isOkNft("4", {from: other_user})).to.be.false;
-            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", "1", "0", SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
             expect(await this.nft_c_logic.isNoNft("4", {from: other_user})).to.be.false;
             expect(await this.nft_c_logic.isOkNft("4", {from: other_user})).to.be.true;
         });
         it('checking ProjectArt status', async () => {
             expect(await this.nft_c_logic.isNoNft("5", {from: other_user})).to.be.true;
             expect(await this.nft_c_logic.isOkNft("5", {from: other_user})).to.be.false;
-            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", "0", "1", "0", SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
             expect(await this.nft_c_logic.isNoNft("5", {from: other_user})).to.be.false;
             expect(await this.nft_c_logic.isOkNft("5", {from: other_user})).to.be.true;
         });
         it('checking Ticket status', async () => {
             expect(await this.nft_c_logic.isNoNft("6", {from: other_user})).to.be.true;
             expect(await this.nft_c_logic.isOkNft("6", {from: other_user})).to.be.false;
-            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", "0", "1", "0", SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
             expect(await this.nft_c_logic.isNoNft("6", {from: other_user})).to.be.false;
             expect(await this.nft_c_logic.isOkNft("6", {from: other_user})).to.be.true;
         });
         it('checking Other status', async () => {
             expect(await this.nft_c_logic.isNoNft("7", {from: other_user})).to.be.true;
             expect(await this.nft_c_logic.isOkNft("7", {from: other_user})).to.be.false;
-            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "4", "0",  "0", SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "4", "1", SHARES_TOTAL.toString(), {from: other_user});
             expect(await this.nft_c_logic.isNoNft("7", {from: other_user})).to.be.false;
             expect(await this.nft_c_logic.isOkNft("7", {from: other_user})).to.be.true;
         });
@@ -2078,7 +2047,7 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
             let json = JSON.parse(info);
             assert.equal(json.type, "Project");
             assert.equal(json.nft_id, "1");
-            assert.equal(json.NFTs.length, 5);
+            assert.equal(json.NFTs.length, "6");
 
             await expectRevert(this.nft_c_logic.getProjectOfToken("1", {from: other_user})
             , "No project linked");
@@ -2157,8 +2126,8 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
             assert.equal(json.type, "Other");
             assert.equal(json.nft_id, "7");
 
-            await expectRevert(this.nft_c_logic.getProjectOfToken("7", {from: other_user})
-                , "No project linked");
+            const project_id = await this.nft_c_logic.getProjectOfToken("7", {from: other_user});
+            assert.equal(project_id, "1");
             const collection_id = await this.nft_c_logic.getCollectionOfToken("7", {from: other_user});
             assert.equal(collection_id, "4");
             const nft = await this.nft_c_logic.getNFT("7", {from: other_user});
@@ -2360,10 +2329,10 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
             await this.sm_logic.stake(other_user, STAKE.toString(), PROJECT_ID, SHARES_TOTAL.toString(), {from: other_user});
             await this.rm_logic.registerRevenue(PROJECT_ID, "1000", {from: minter_address});
             //4
-            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", PROJECT_ID, SHARES_TOTAL.toString(), PRICE.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", PROJECT_ID, SHARES_TOTAL.toString(), {from: other_user});
             const COLLECTION_ID = "4";
             //5
-            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", COLLECTION_ID, PROJECT_ID, PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", COLLECTION_ID, PROJECT_ID, SHARES_TOTAL.toString(), {from: other_user});
             let nft_id = "5";
             const shares_to_sell = 50;
             const price = 500;
@@ -2373,9 +2342,9 @@ contract('NFT Management - BRD', ([registryFunder, deployer_address, other_user,
             await this.nft_c_logic.implementTransaction(tx_id.toString(), {from: digital_investor});
 
             //6
-            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", COLLECTION_ID, PROJECT_ID, PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", COLLECTION_ID, PROJECT_ID, SHARES_TOTAL.toString(), {from: other_user});
             //7
-            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", COLLECTION_ID, PROJECT_ID, PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", COLLECTION_ID, PROJECT_ID, SHARES_TOTAL.toString(), {from: other_user});
             nft_id = "7";
             ++tx_id;
             await this.nft_c_logic.approveTransaction(other_user, digital_investor, nft_id, shares_to_sell.toString(), price.toString(), !is_ether_payment, {from: other_user});

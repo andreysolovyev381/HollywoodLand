@@ -95,7 +95,7 @@ contract ProjectCatalogImplementation is ExternalProjectCatalogStorage, ControlB
     ) public isSetupOk returns (uint256) {
         require (by_owner != address(0), "Address should be valid");
         require (m_nft_ownership.isApprovedOperator(by_owner, msg.sender), "project: msg.sender is not approved");
-        uint256 id = m_nft_catalog.mint(by_owner, "Project", "", 0, 0, 0, nft_ownership_total_shares);
+        uint256 id = m_nft_catalog.mint(by_owner, "Project", "", 0, 0, nft_ownership_total_shares);
         Project storage project = m_projects[id];
         project._name = project_name;
         project._road_block = getRoadBlockFromStr(road_block);

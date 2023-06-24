@@ -10,7 +10,9 @@ pragma solidity >=0.8.0;
 
 import "./GovernanceTokenStorage.sol";
 import "../../NFT/Libs/NFTStructs.sol";
+import "../../NFT/Libs/NFT_Helpers.sol";
 import "../../Libs/InheritanceHelpers.sol";
+import "../../Libs/ExternalFuncs.sol";
 
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -29,6 +31,8 @@ contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, Contro
             address(m_nft_catalog) != address(0) &&
             address(m_nft_ownership) != address(0) &&
             address(m_project_catalog) != address(0) &&
+            address(m_debt_manager) != address(0) &&
+            address(m_stakes_manager) != address(0) &&
             m_company_account != address(0)
 
         , "Setup is not ok GT");
@@ -55,7 +59,6 @@ contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, Contro
         return m_implementation_version;
     }
 
-
     function setNativeToken (address token) public onlyRole(MINTER_ROLE) {
         require (token != address(0), "Address should be valid");
         m_token = IERC777Wrapper(token);
@@ -81,70 +84,98 @@ contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, Contro
         m_company_account = company_account;
         emit CompanyAccountSet(m_company_account);
     }
+    function setDebtManager (address debt_manager) public onlyRole(MINTER_ROLE) {
+        require (debt_manager != address(0), "no address");
+        m_debt_manager = IDebtManager(debt_manager);
+        emit DebtManagerSet(debt_manager);
+    }
+    function setStakesManager (address stakes_manager) public onlyRole(MINTER_ROLE) {
+        require (stakes_manager != address(0), "no address");
+        m_stakes_manager = IStakesManager(stakes_manager);
+        emit StakesManagerSet(stakes_manager);
+    }
 
     function getAddress () public view returns (address) {
         return address(this);
     }
 
-    function depositTokens(address account, uint256 amount, uint256 project_id) public isSetupOk returns (bool) {
+    function depositTokens(address account, uint256 volume, uint256 project_id) public isSetupOk returns (bool) {
         if (project_id != COMMON_ISSUES_UID){
             NFTStructs.NFT memory project = m_nft_catalog.getNFT(project_id);
             require (project._type == NFTStructs.NftType.Project, "Can't deposit for a non-Project");
             require (m_project_catalog.projectExists(project_id), "No such a project in Project catalog");
         }
         require (m_token.isOperatorFor(msg.sender, account), "Sender is not an operator for the account");
-        m_token.operatorSend(account, m_company_account, amount, '', '');
-        _mint(account, project_id, amount);
+        m_token.operatorSend(account, m_company_account, volume, '', '');
+        _mint(account, project_id, volume);
 
         m_deposits[account][project_id]._gov_tokens =
-            m_deposits[account][project_id]._gov_tokens.add(amount);
+            m_deposits[account][project_id]._gov_tokens.add(volume);
         m_deposits[account][project_id]._gov_tokens_by_native_token =
-            m_deposits[account][project_id]._gov_tokens_by_native_token.add(amount);
+            m_deposits[account][project_id]._gov_tokens_by_native_token.add(volume);
 
-        emit TokensDeposited(account, project_id, amount);
+        emit TokensDeposited(account, project_id, volume);
 
     return true;
     }
-    function depositNFTs(address account, uint256 token_id, uint256 project_id) public isSetupOk returns (bool) {
+    function depositNFTs(address account, uint256 nft_id, uint256 project_id) public isSetupOk returns (bool) {
         require(
             m_nft_ownership.isApprovedOperator(account, msg.sender) ||
-            m_nft_ownership.isApprovedOperator(account, msg.sender, token_id)
+            m_nft_ownership.isApprovedOperator(account, msg.sender, nft_id)
             , "not approved by Governance Token");
 
-        NFTStructs.NFT memory nft = m_nft_catalog.getNFT(token_id);
-        require (nft._type != NFTStructs.NftType.Project, "Can't deposit a Project");
+        NFTStructs.NFT memory nft = m_nft_catalog.getNFT(nft_id);
+        require (
+            nft._type == NFTStructs.NftType.Stake ||
+            nft._type == NFTStructs.NftType.Debt,
+                ExternalFuncs.concat("Can't deposit a ", NFT_Helpers.getStrFromNftType(nft._type))
+        );
 
         if (project_id != COMMON_ISSUES_UID){
             NFTStructs.NFT memory project = m_nft_catalog.getNFT(project_id);
             require (project._type == NFTStructs.NftType.Project, "Can't deposit for a non-Project");
             require (m_project_catalog.projectExists(project_id));
 
-            uint256 stored_project_id = m_nft_catalog.getProjectOfToken(token_id);
-            require (stored_project_id == project_id, "Token is not owned by this project");
+            uint256 stored_project_id = m_nft_catalog.getProjectOfToken(nft_id);
+            require (stored_project_id == project_id, "What you are depositing is not owned by this project");
         }
 
-        require (nft._last_price != 0, "NFT has not yet been a subject of a sale, can't deposit 0");
 
-        uint256 shares_available = m_nft_ownership.getSharesAvailable(account, token_id);
-        uint256 shares_total = m_nft_ownership.getTotalSharesForNFT(token_id);
-        uint256 governance_tokens = nft._last_price.mul(shares_available).div(shares_total);
+        uint256 value;
+        if (nft._type == NFTStructs.NftType.Debt) {
+            (uint256 principal, uint256 accrued_interest) = m_debt_manager.getIndividualDebtOutstanding(nft_id);
+            value = principal + accrued_interest;
+        }
+        else if (nft._type == NFTStructs.NftType.Stake) {
+            value = m_stakes_manager.getStakeVolume(nft_id);
+        } else {
+            value = 0;
+        }
+        require (value != 0, "no NFT value is available, can't deposit 0");
 
-        uint256 tx_id = m_nft_catalog.approveTransaction(account, m_company_account, token_id, shares_available, 0, false);
+        uint256 shares_available = m_nft_ownership.getSharesAvailable(account, nft_id);
+        require (shares_available != 0, "no NFT ownership is available, can't deposit 0");
+
+        uint256 shares_total = m_nft_ownership.getTotalSharesForNFT(nft_id);
+        require (shares_total != 0, "something is wrong with NFT, can't deposit 0");
+
+        uint256 governance_tokens = value.mul(shares_available).div(shares_total);
+
+        uint256 tx_id = m_nft_catalog.approveTransaction(account, m_company_account, nft_id, shares_available, 0, false);
         m_nft_catalog.implementTransaction(tx_id);
 
         _mint(account, project_id, governance_tokens);
 
         m_deposits[account][project_id]._gov_tokens =
             m_deposits[account][project_id]._gov_tokens.add(governance_tokens);
-        m_deposits[account][project_id]._gov_tokens_by_nfts[token_id]._tokens_issued =
-            m_deposits[account][project_id]._gov_tokens_by_nfts[token_id]._tokens_issued.add(governance_tokens);
-        m_deposits[account][project_id]._gov_tokens_by_nfts[token_id]._shares_deposited =
-            m_deposits[account][project_id]._gov_tokens_by_nfts[token_id]._shares_deposited.add(shares_available);
+        m_deposits[account][project_id]._gov_tokens_by_nfts[nft_id]._tokens_issued =
+            m_deposits[account][project_id]._gov_tokens_by_nfts[nft_id]._tokens_issued.add(governance_tokens);
+        m_deposits[account][project_id]._gov_tokens_by_nfts[nft_id]._shares_deposited =
+            m_deposits[account][project_id]._gov_tokens_by_nfts[nft_id]._shares_deposited.add(shares_available);
 
-        IterableSet.insert(m_deposits[account][project_id]._nfts, token_id);
+        IterableSet.insert(m_deposits[account][project_id]._nfts, nft_id);
 
-
-        emit NFTsDeposited(account, project_id, token_id, governance_tokens);
+        emit NFTsDeposited(account, project_id, nft_id, governance_tokens);
         return true;
     }
     function withdrawTokens(address account, uint256 amount, uint256 project_id) public virtual isSetupOk returns (bool) {

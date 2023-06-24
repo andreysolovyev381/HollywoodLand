@@ -202,7 +202,6 @@ contract StakesManagerImplementation is ExternalStakesManagerStorage, ControlBlo
             "",
             0,
             project_id,
-            hwlt_tokens,
             shares_available
         );
 

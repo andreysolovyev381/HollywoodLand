@@ -94,7 +94,6 @@ contract DebtManagerImplementation is ExternalDebtManagerStorage, ControlBlock {
             "",
             0,
             project_id,
-            volume,
             nft_ownership_total_shares);
 
         m_project_debts[project_id]._exists = true;

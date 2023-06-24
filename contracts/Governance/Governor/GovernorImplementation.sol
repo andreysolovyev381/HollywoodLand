@@ -16,6 +16,7 @@ contract GovernorImplementation is ExternalGovernorStorage, GovernorCoreWrapper,
             address(m_token) != address(0) &&
             address(m_nft_catalog) != address(0) &&
             address(m_project_catalog) != address(0) &&
+            address(m_nft_ownership) != address(0) &&
             m_company_account != address(0)
         , "Setup is not ok Governor");
         _;
@@ -92,6 +93,11 @@ contract GovernorImplementation is ExternalGovernorStorage, GovernorCoreWrapper,
         m_project_catalog = IProjectCatalog(project_catalog);
         emit ProjectCatalogSet(project_catalog);
     }
+    function setNFTOwnership (address nft_ownership) public onlyRole(MINTER_ROLE) {
+        require (nft_ownership != address(0), "no address");
+        m_nft_ownership = INFTOwnership(nft_ownership);
+        emit NFTOwnershipSet(nft_ownership);
+    }
 
 
     /**
@@ -109,6 +115,7 @@ contract GovernorImplementation is ExternalGovernorStorage, GovernorCoreWrapper,
             NFTStructs.NFT memory project = m_nft_catalog.getNFT(project_id);
             require (project._type == NFTStructs.NftType.Project, "Can't propose for a non-Project");
             require (m_project_catalog.projectExists(project_id), "Project is not active");
+            require (m_nft_ownership.isOwner(msg.sender, project_id), "Only project owner can propose");
         }
         uint256 proposalId = hashProposal(project_id, targets, values, calldatas, keccak256(bytes(description)));
 
@@ -161,6 +168,7 @@ contract GovernorImplementation is ExternalGovernorStorage, GovernorCoreWrapper,
             NFTStructs.NFT memory project = m_nft_catalog.getNFT(project_id);
             require (project._type == NFTStructs.NftType.Project, "Can't propose for a non-Project");
             require (m_project_catalog.projectExists(project_id), "Project is not active");
+            require (m_nft_ownership.isOwner(msg.sender, project_id), "Only project owner can propose");
         }
         uint256 proposalId = hashProposal(project_id, targets, values, calldatas, keccak256(bytes(description)));
 

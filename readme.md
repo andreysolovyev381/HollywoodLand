@@ -88,47 +88,47 @@ The contracts were audited, here is the [first round findings](https://solidity.
 Issues were addressed the following way:
 * **Finding #1** 
   * ... Recommendation: An NFT's price should not be updated until the implementTransaction() function is called to ensure the NFT was actually purchased at the value last_price is being set.
-  * Code amended: NFTCatalogImplementation.sol, lines 264, 316
+  * Code amended: NFTCatalogImplementation.sol
 
 
 * **Finding #2** 
   * ... Recommendation: The fromTokensToEther() function should either check the msg.sender's balance and transfer the tokens from the msg.sender or check the to address' balance and send the tokens from the to address.
-  * Code amended: TokenImplementation.sol, line 89
+  * Code amended: TokenImplementation.sol
 
 
 * **Finding #3**
   * ... Recommendation: Checking that only the msg.value is equal to the transaction price is sufficient.
-  * Code amended: NFTCatalogImplementation.sol, line 287-290
+  * Code amended: NFTCatalogImplementation.sol
 
 
 * **Finding #4**  
   * Recommendation: The team should consider only allowing Project owners to mint or implementing a mint allowance system for Projects.
   * Code amended: 
-    * NFTCatalogImplementation.sol, lines 150-152
-    * nft_catalog_business_requirements.js, block of tests at lines 1036-1200
+    * NFTCatalogImplementation.sol
+    * nft_catalog_business_requirements.js, block of tests 
 
 
 * **Finding #5** 
   * ... Recommendation: The addStakes() function should be called before transferring the ERC777 tokens.
-  * Code amended: StakesManagerImplementation.sol, line 107
+  * Code amended: StakesManagerImplementation.sol
 
 
 * **Finding #6**
   * ... Recommendation: The registerRevenue() function should check a revenue does not already exist for the project at the current. 
   * Code amended: 
-    * RevenuesManagerImplementation.sol, line 94
-    * finance_business_requirements.js, line 1304
+    * RevenuesManagerImplementation.sol
+    * finance_business_requirements.js
 
 
 * **Finding #7**
   * ... Recommendation: The team should consider disabling Governance Token transfers so the intended functionality is more apparent.
   * Code amended:
-    * GovernanceTokenProxy.sol, some lines were removed
-    * GovernanceTokenImplementation.sol, some lines were removed, lines 418-428 added
-    * GovernanceTokenStorage.sol, lines 15-20
-    * governance_token_business_requirements.js, lines 759-766, some other technical changes - ie, update of a project_id value inside of a test
+    * GovernanceTokenProxy.sol
+    * GovernanceTokenImplementation.sol
+    * GovernanceTokenStorage.sol
+    * governance_token_business_requirements.js, some other technical changes - ie, update of a project_id value inside of a test
 
-### Other amendments
+### Other amendments 1
 * **ERC777 HOOKS**: As per Client's request, some of Token's (so called "native token") methods were removed to reduce the risks of using ERC777 functionality. Specifically, "hooks" related functions as well as their usage were removed from the code.
   * Files affected:
     * TokenImplementation.sol, removed hooks;
@@ -139,7 +139,30 @@ Issues were addressed the following way:
   * Other contracts' functions and events containing "ERC777" were refactored to contain "NativeToken".
 * **GOVERNOR CONTRACT**: became available for testing, so the following changes were introduced:
   * Contract was _heavily_ refactored;
-  * After testing started, another contract mock appeared (two contract mocks in total now), therefore there is a new folder contracts/Mocks, that contains the mocks;
+  * After testing started, another contract mock appeared (three contract mocks in total now), therefore there is a new folder contracts/Mocks, that contains the mocks;
   * GovernorCore was moved to contracts/Libs as GovernorCoreWrapper.
 * **MINOR REFACTORING** 
   * **UPGRADEABLE** feature - introduced Libs/InheritanceHelpers.sol, that helps to straighten up inheritance hierarchy;
+
+### Other amendments 2
+* **Audit Finding #4**
+  * Recommendation: eliminate an ability to mint Ticket, ProjectArt, Collection, Other types of NFT for everybody, except Project Owners.
+  * Code amended:
+    * NFTCatalogImplementation.sol, added a guard at mint();
+    * nft_catalog_business_requirements.js, all the tests, as Collection now is mintable by a Project Owner only;
+* **Client's request to allow Vote propose for Project Owners only**
+  * Code amended:
+    * GovernorDataStorage.sol, added links to the required contracts;
+    * GovernorImplementation.sol, added funcs to initialize the contracts, added guards;
+    * governor_business_requirements.js - amended the tests in the way to reflect the changes.
+  * Limitations:
+    * For system-wide proposal anybody can propose a vote if threshold is overcome.
+* **Finding #1**
+  * Remove conversion from any NFT but Debt and Stake, also Tokens, keep conversion 1:1, remove an idea to update the price of a particular NFT.
+  * Code amended: 
+    * NFTStructs.sol, updated the structure;
+    * NFTCatalogImplementation.sol, updated mint(), removed last_price, removed updateNFTPrice() func;
+    * GovernanceTokenImplementation.sol, significant change of a function depositNFTs();
+    * GovernanceTokenStorage.sol, added links to other contracts.
+    * All other contracts and tests in terms of calling NFTImplementation.mint() - no need to have a price as an argument
+

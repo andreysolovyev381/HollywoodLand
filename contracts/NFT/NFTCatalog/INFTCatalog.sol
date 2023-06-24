@@ -10,7 +10,6 @@ interface INFTCatalog {
         string memory uri,
         uint256 collection_id,
         uint256 project_id,
-        uint256 price,
         uint256 shares
     ) external returns (uint256);
     function mintFrom (uint256 nft_id_src) external returns (uint256);

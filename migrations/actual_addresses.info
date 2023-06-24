@@ -1,0 +1,411 @@
+
+    deployer_address: "0x0726DfE380598473B3809Bc78363Ca762D9B1821"
+    admin_address: "0x0726DfE380598473B3809Bc78363Ca762D9B1821"
+    minter_address: "0xe53200173093d9726dEA2ec31E34F02E0f360cf1"
+    company_account: "0x03A42027af5194B010a81C24b1d38122572Ed528"
+    funds_manager_account: "0xCf052F9c0e4937b3A36F027BBac5B050478f7AB0"
+    project_manager_account: "0x7854fFB604508383601a0089c2E34657123ccC14"
+
+
+    const addr_DebtManagerImplementation = '0x129256AFe1412475f0Ed204EDDAc0dE5E6dcB24d'
+    const addr_DebtManagerProxy = '0xA611605F1eed09257F9a55Dc1625A2E245062e60'
+    const addr_RevenuesManagerImplementation = '0x099b196622EE0231aD235B100A41cfb4a1e9C335'
+    const addr_RevenuesManagerProxy = '0xD9280f4230Dd3C45ee4a417C38b16B047c822CdC'
+    const addr_StakesManagerImplementation = '0xeE0f4282dAE782bCeD73cB540c899DDC0e2190f1'
+    const addr_StakesManagerProxy = '0x751b6971A9701e892e8Baea0A98335e5Db9BaE06'
+    const addr_NFTCatalogImplementation = '0xBF04095D7dF2E4E34F7223C96c238200b189C628'
+    const addr_NFTCatalogProxy = '0xe6922B79141E0EF684dE72C62e1119c65187600F'
+    const addr_NFTOwnershipImplementation = '0x2f15Bc37C42BEC30f7F5299a627E2ca0AbCD66c1'
+    const addr_NFTOwnershipProxy = '0x24E4042eb82d84E331Eed861fc09Abc705E0Df00'
+    const addr_NFT_TransactionPool_Implementation = '0x17532240cB1945Ef32A735b660883c11760fD2B3'
+    const addr_NFT_TransactionPoolProxy = '0x3B0Ff9cB00591af33dF4AC00BCAd1BE1129b5DEb'
+    const addr_ProjectCatalogImplementation = '0x4a1A12459EB60708CB5058585Ac300FFC8a05554'
+    const addr_ProjectCatalogProxy = '0x5cb8B19acd2e16EB21664B31ff08bc3ff5905851'
+    const addr_GovernanceTokenImplementation = '0x8bDBE8FF09856866FCB79788bbf71Be3Ae727395'
+    const addr_GovernanceTokenProxy = '0xc5d5b928832A7B7fd5486FC07B9Bd8B9cd01645f'
+    const addr_TokenImplementation = '0xFEa51b5E85CfB248fB8082e433f3dE6648a2E23a'
+    const addr_TokenProxy = '0xc3Bf2BE3490695Aaec80F38fB8aaEB79dE53F50b'
+    const addr_PriceOracle = '0x69c8d028bfd1e88baf20D6c7427dF702cB2094e6'
+
+/*
+
+   Deploying 'DebtManagerImplementation'
+   -------------------------------------
+   > transaction hash:    0xcc4670df43e1982b66b72e733ad87473be4aecdae6b2824f6d9673966cc4327a
+   > Blocks: 3            Seconds: 4
+   > contract address:    0x129256AFe1412475f0Ed204EDDAc0dE5E6dcB24d
+   > block number:        29765107
+   > block timestamp:     1671197828
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.226695371998853164
+   > gas used:            3483075 (0x3525c3)
+   > gas price:           1.500000019 gwei
+   > value sent:          0 ETH
+   > total cost:          0.005224612566178425 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765109)
+Debt Manager Implementation was deployed successfully
+
+   Deploying 'DebtManagerProxy'
+   ----------------------------
+   > transaction hash:    0x66ee5c786522c3cab698f090d2e54b534a4e52952727de865cc6673cd7be4231
+   > Blocks: 5            Seconds: 8
+   > contract address:    0xA611605F1eed09257F9a55Dc1625A2E245062e60
+   > block number:        29765117
+   > block timestamp:     1671197848
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.224980828477135613
+   > gas used:            1143029 (0x1170f5)
+   > gas price:           1.500000019 gwei
+   > value sent:          0 ETH
+   > total cost:          0.001714543521717551 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 3 (block: 29765124)
+DebtManager Proxy was deployed successfully
+DebtManager Implementation was initialized successfully
+
+   Deploying 'RevenuesManagerImplementation'
+   -----------------------------------------
+   > transaction hash:    0x5cc9d82f6ca2e471e322530e9233abc239b346f59a76b469346fd7ea537f14bc
+   > Blocks: 2            Seconds: 5
+   > contract address:    0x099b196622EE0231aD235B100A41cfb4a1e9C335
+   > block number:        29765132
+   > block timestamp:     1671197880
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.221652560932758713
+   > gas used:            2218845 (0x21db5d)
+   > gas price:           1.50000002 gwei
+   > value sent:          0 ETH
+   > total cost:          0.0033282675443769 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765136)
+Revenues Manager Implementation was deployed successfully
+
+   Deploying 'RevenuesManagerProxy'
+   --------------------------------
+   > transaction hash:    0xe4fabc02bf967afdaa3a3464a42c30b484bee2d78ae70f7e5c5521a08eabee13
+   > Blocks: 5            Seconds: 10
+   > contract address:    0xD9280f4230Dd3C45ee4a417C38b16B047c822CdC
+   > block number:        29765147
+   > block timestamp:     1671197912
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.219937945409897173
+   > gas used:            1143077 (0x117125)
+   > gas price:           1.50000002 gwei
+   > value sent:          0 ETH
+   > total cost:          0.00171461552286154 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765149)
+RevenuesManager Proxy was deployed successfully
+RevenuesManager Implementation was initialized successfully
+
+   Deploying 'StakesManagerImplementation'
+   ---------------------------------------
+   > transaction hash:    0x369af8de688474541f904714ffc838bfe5888d4e3290fe5f61c164b77771724f
+   > Blocks: 7            Seconds: 13
+   > contract address:    0xeE0f4282dAE782bCeD73cB540c899DDC0e2190f1
+   > block number:        29765163
+   > block timestamp:     1671197946
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.216154465361973093
+   > gas used:            2522320 (0x267cd0)
+   > gas price:           1.500000019 gwei
+   > value sent:          0 ETH
+   > total cost:          0.00378348004792408 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765169)
+Stakes Manager Implementation was deployed successfully
+
+   Deploying 'StakesManagerProxy'
+   ------------------------------
+   > transaction hash:    0xe30c3d2cf4eb22e43ef3ae24dd5fde91512e3e7eed5d9b3ff9d56aef26e37c86
+   > Blocks: 4            Seconds: 9
+   > contract address:    0x751b6971A9701e892e8Baea0A98335e5Db9BaE06
+   > block number:        29765174
+   > block timestamp:     1671197970
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.214439903842541396
+   > gas used:            1143041 (0x117101)
+   > gas price:           1.500000017 gwei
+   > value sent:          0 ETH
+   > total cost:          0.001714561519431697 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 3 (block: 29765179)
+StakesManager Proxy was deployed successfully
+StakesManager Implementation was initialized successfully
+
+   Deploying 'NFTCatalogImplementation'
+   ------------------------------------
+   > transaction hash:    0x6ad878bd3edfb89a6be1c5003fe63196011af3a894d73164f04744581229fab6
+   > Blocks: 3            Seconds: 4
+   > contract address:    0xBF04095D7dF2E4E34F7223C96c238200b189C628
+   > block number:        29765191
+   > block timestamp:     1671198006
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.208297799772930884
+   > gas used:            4094736 (0x3e7b10)
+   > gas price:           1.500000017 gwei
+   > value sent:          0 ETH
+   > total cost:          0.006142104069610512 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 3 (block: 29765195)
+NFT Catalog Implementation was deployed successfully
+
+   Deploying 'NFTCatalogProxy'
+   ---------------------------
+   > transaction hash:    0xa366ea86ce530b713a38428a2b42fb3610ba8f094d55261c6f8980d9d0c4ddd2
+   > Blocks: 8            Seconds: 16
+   > contract address:    0xe6922B79141E0EF684dE72C62e1119c65187600F
+   > block number:        29765203
+   > block timestamp:     1671198032
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.206655721254320661
+   > gas used:            1094719 (0x10b43f)
+   > gas price:           1.500000017 gwei
+   > value sent:          0 ETH
+   > total cost:          0.001642078518610223 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765207)
+NFT Catalog Proxy was deployed successfully
+NFT Catalog Implementation was initialized successfully
+
+   Deploying 'NFTOwnershipImplementation'
+   --------------------------------------
+   > transaction hash:    0xeabdf6dd046eca12d61d733b5db1476b0c2864d9e37ce535f3814221cda96c7b
+   > Blocks: 5            Seconds: 8
+   > contract address:    0x2f15Bc37C42BEC30f7F5299a627E2ca0AbCD66c1
+   > block number:        29765220
+   > block timestamp:     1671198068
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.200539807180929693
+   > gas used:            4077276 (0x3e36dc)
+   > gas price:           1.500000018 gwei
+   > value sent:          0 ETH
+   > total cost:          0.006115914073390968 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765224)
+NFT Ownership Implementation was deployed successfully
+
+   Deploying 'NFTOwnershipProxy'
+   -----------------------------
+   > transaction hash:    0xfba7236cd0b55291919535b9df71837d136d423c5c066f500811b2b79120dd4f
+   > Blocks: 5            Seconds: 8
+   > contract address:    0x24E4042eb82d84E331Eed861fc09Abc705E0Df00
+   > block number:        29765229
+   > block timestamp:     1671198086
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.198932815162717117
+   > gas used:            1071328 (0x1058e0)
+   > gas price:           1.500000017 gwei
+   > value sent:          0 ETH
+   > total cost:          0.001606992018212576 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 1 (block: 29765232)
+   > confirmation number: 3 (block: 29765234)
+NFT Ownership Proxy was deployed successfully
+NFT Ownership Implementation was initialized successfully
+
+   Deploying 'NFT_TransactionPool_Implementation'
+   ----------------------------------------------
+   > transaction hash:    0x3d7c923b91e4d084ebef4b31cfe6dd65bf8bc4f9bd1dfa8de73881c94b5565d4
+   > Blocks: 2            Seconds: 5
+   > contract address:    0x17532240cB1945Ef32A735b660883c11760fD2B3
+   > block number:        29765243
+   > block timestamp:     1671198116
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.195878741626068235
+   > gas used:            2036049 (0x1f1151)
+   > gas price:           1.500000018 gwei
+   > value sent:          0 ETH
+   > total cost:          0.003054073536648882 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765246)
+NFT Transaction Pool Implementation was deployed successfully
+
+   Deploying 'NFT_TransactionPoolProxy'
+   ------------------------------------
+   > transaction hash:    0xad45303661d87eeda6ea5fbba257f54e1b0a38b5b39e12e42a60524a5c6b69be
+   > Blocks: 5            Seconds: 11
+   > contract address:    0x3B0Ff9cB00591af33dF4AC00BCAd1BE1129b5DEb
+   > block number:        29765257
+   > block timestamp:     1671198146
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.194204717605979947
+   > gas used:            1116016 (0x110770)
+   > gas price:           1.500000018 gwei
+   > value sent:          0 ETH
+   > total cost:          0.001674024020088288 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765260)
+NFT Transaction Pool Proxy was deployed successfully
+NFT Transaction Pool Implementation was initialized successfully
+
+   Deploying 'ProjectCatalogImplementation'
+   ----------------------------------------
+   > transaction hash:    0x51060383e3cac4a0c53893a1fb97abb4e2a919f176f54fbc03d6f95ce1840a22
+   > Blocks: 4            Seconds: 8
+   > contract address:    0x4a1A12459EB60708CB5058585Ac300FFC8a05554
+   > block number:        29765273
+   > block timestamp:     1671198180
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.188010380531647903
+   > gas used:            4129558 (0x3f0316)
+   > gas price:           1.500000018 gwei
+   > value sent:          0 ETH
+   > total cost:          0.006194337074332044 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 3 (block: 29765277)
+Project Catalog Implementation was deployed successfully
+
+   Deploying 'ProjectCatalogProxy'
+   -------------------------------
+   > transaction hash:    0xb5dc63c7653e47b056835bcfbb726ab8f93045d176de58d6fba1304bf389f792
+   > Blocks: 4            Seconds: 12
+   > contract address:    0x5cb8B19acd2e16EB21664B31ff08bc3ff5905851
+   > block number:        29765284
+   > block timestamp:     1671198204
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.186295801011072949
+   > gas used:            1143053 (0x11710d)
+   > gas price:           1.500000018 gwei
+   > value sent:          0 ETH
+   > total cost:          0.001714579520574954 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765289)
+Project Catalog Proxy was deployed successfully
+Project Catalog Implementation was initialized successfully
+
+   Deploying 'GovernanceTokenImplementation'
+   -----------------------------------------
+   > transaction hash:    0x5c4065e49f341399da6ba7b0024cd51215ce37fa6ffdb9782c95a831f4c73950
+   > Blocks: 2            Seconds: 5
+   > contract address:    0x8bDBE8FF09856866FCB79788bbf71Be3Ae727395
+   > block number:        29765302
+   > block timestamp:     1671198242
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.179557472425720788
+   > gas used:            4492219 (0x448bbb)
+   > gas price:           1.500000019 gwei
+   > value sent:          0 ETH
+   > total cost:          0.006738328585352161 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 3 (block: 29765308)
+Governance Token Implementation was deployed successfully
+
+   Deploying 'GovernanceTokenProxy'
+   --------------------------------
+   > transaction hash:    0x953a933b390f80ac3312112066a37adba4755184c3241f2c9a80eb81f54b8a96
+   > Blocks: 3            Seconds: 4
+   > contract address:    0xc5d5b928832A7B7fd5486FC07B9Bd8B9cd01645f
+   > block number:        29765317
+   > block timestamp:     1671198274
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.176670876887232848
+   > gas used:            1924397 (0x1d5d2d)
+   > gas price:           1.50000002 gwei
+   > value sent:          0 ETH
+   > total cost:          0.00288659553848794 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765319)
+Governance Token Proxy was deployed successfully
+Governance Token Implementation was initialized successfully
+
+   Deploying 'TokenImplementation'
+   -------------------------------
+   > transaction hash:    0xec839c97fae832db68821421900a0450f14b9e8fd6310db0c6283211684efb71
+   > Blocks: 6            Seconds: 12
+   > contract address:    0xFEa51b5E85CfB248fB8082e433f3dE6648a2E23a
+   > block number:        29765333
+   > block timestamp:     1671198308
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.171648327823613894
+   > gas used:            3348366 (0x33178e)
+   > gas price:           1.500000019 gwei
+   > value sent:          0 ETH
+   > total cost:          0.005022549063618954 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765339)
+Token Implementation was deployed successfully
+
+   Deploying 'TokenProxy'
+   ----------------------
+   > transaction hash:    0xb4b07ba41f3f819705084ae27b0b0dda2a384641c69f8ba3272b9cfe8b259f17
+   > Blocks: 3            Seconds: 9
+   > contract address:    0xc3Bf2BE3490695Aaec80F38fB8aaEB79dE53F50b
+   > block number:        29765346
+   > block timestamp:     1671198336
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.169935669800778454
+   > gas used:            1141772 (0x116c0c)
+   > gas price:           1.50000002 gwei
+   > value sent:          0 ETH
+   > total cost:          0.00171265802283544 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 2 (block: 29765348)
+Token Proxy was deployed successfully
+Token Implementation was initialized successfully
+
+   Deploying 'PriceOracle'
+   -----------------------
+   > transaction hash:    0x8652825646d7d2865317686fc51d8cde99d386bca99c917227bed5d2c49c30bd
+   > Blocks: 8            Seconds: 18
+   > contract address:    0x69c8d028bfd1e88baf20D6c7427dF702cB2094e6
+   > block number:        29765363
+   > block timestamp:     1671198372
+   > account:             0x0726DfE380598473B3809Bc78363Ca762D9B1821
+   > balance:             8.169117146789864814
+   > gas used:            545682 (0x85392)
+   > gas price:           1.50000002 gwei
+   > value sent:          0 ETH
+   > total cost:          0.00081852301091364 ETH
+
+   Pausing for 2 confirmations...
+   ------------------------------
+   > confirmation number: 3 (block: 29765369)
+Price Oracle was deployed successfully
+/// -------
+/// ------------------------- Linkage -------------------------
+/// -------
+Price Oracle was linked successfully
+NFT group was linked successfully
+Project Catalog was linked successfully
+Finance group was linked successfully
+Governance Token was linked successfully
+
+*/

@@ -399,6 +399,7 @@ module.exports = async (deployer, network, accounts) => {
     await gvrn_logic.setNativeToken(token_logic.address, {from:minter_address});
     await gvrn_logic.setNFTCatalog(nft_c_logic.address, {from:minter_address});
     await gvrn_logic.setProjectCatalog(pc_logic.address, {from:minter_address});
+    await gvrn_logic.setNFTOwnership(nft_o_logic.address, {from:minter_address});
     console.log('Governor was linked successfully');
 
 }

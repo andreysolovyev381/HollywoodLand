@@ -114,7 +114,6 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, ControlBlock {
         string memory uri,
         uint256 collection_id,
         uint256 project_id,
-        uint256 price,
         uint256 shares
     ) public isSetupOk returns (uint256){
         require (new_owner != address(0), "Address should be valid");
@@ -135,20 +134,24 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, ControlBlock {
             require (m_nfts[project_id]._type == NFTStructs.NftType.Project && isOkNft(project_id), "Non-existing Project, zero to skip");
         }
         if (project_id != 0 && collection_id != 0) {
+            //checking that project actually contains collection
             require (m_nft_to_projects[collection_id] == project_id, "Collection is not in the Project");
         }
 
-        //no need in this extra guard, both DM and SM checks NFT[nft_id] exists and it is a Project
-//        if (msg.sender == address(m_debt_manager) || msg.sender == address(m_stakes_manager)) {
-//            require (
-//                project_id != 0 &&
-//                m_nfts[project_id]._type == NFTStructs.NftType.Project &&
-//                isOkNft(project_id)
-//                , "no Finance for no Project");
-//        }
         //added as Audit Finding #4
-        if (nft_type == NFTStructs.NftType.ProjectArt) {
-            require (project_id != 0 && m_nft_ownership.isOwner(msg.sender, project_id), "Only project owner can mint Project Art");
+        if (
+            nft_type == NFTStructs.NftType.Collection ||
+            nft_type == NFTStructs.NftType.Ticket ||
+            nft_type == NFTStructs.NftType.ProjectArt ||
+            nft_type == NFTStructs.NftType.Other
+        ) {
+            require (
+            project_id != 0 &&
+            (m_nft_ownership.isOwner(msg.sender, project_id) ||
+            m_nft_ownership.isApprovedOperator(new_owner, msg.sender) ||
+            m_nft_ownership.isApprovedOperator(new_owner, msg.sender, project_id)),
+            ExternalFuncs.concat("Only project owner can mint ", NFT_Helpers.getStrFromNftType(nft_type))
+            );
         }
 
         //set 100% ownership for minter, check operatorship
@@ -160,7 +163,6 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, ControlBlock {
         nft._uri = uri;
         nft._type = nft_type;
         m_nfts[nft_id] = nft;
-        nft._last_price = nft_type == NFTStructs.NftType.Stake ? updatePriceOfNFT(nft_id, shares, price) : 0;
 
         //regular NFT
         if ((nft._type != NFTStructs.NftType.Project && nft._type != NFTStructs.NftType.Collection)){
@@ -261,8 +263,6 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, ControlBlock {
 
         m_nft_transaction_pool.setTransactionStatus(tx_id, NFTStructs.TransactionStatus.Approved);
 
-        // last price update is moved to this->implementTransaction as Audit Finding #1
-
         emit TransactionApproved (from, to, nft_id, shares, price, tx_id, is_ether_payment ? "ether" : "tokens");
         return tx_id;
     }
@@ -311,9 +311,6 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, ControlBlock {
                     m_token.operatorSend(txn._to, txn._from, value, '', '') ; //will revert in case msg.sender is not an operator for buyer address
                 }
             }
-
-            //added as Audit Finding #1
-            m_nfts[txn._nft_id]._last_price = updatePriceOfNFT(txn._nft_id, txn._shares, value);
         }
 
         //should be done for any type of NFT, update of the ownership executed AFTER payment is successfully proceeded
@@ -336,16 +333,6 @@ contract NFTCatalogImplementation is ExternalNFTCatalogStorage, ControlBlock {
             require (nft_type != NFTStructs.NftType.Project, "use Project Catalog");
         }
     }
-    function updatePriceOfNFT(uint256 nft_id, uint256 shares, uint256 price) private view isSetupOk returns (uint256) {
-        uint256 total_shares = m_nft_ownership.getTotalSharesForNFT(nft_id);
-
-        return
-            m_nfts[nft_id]._last_price == 0 ?
-            total_shares.mul(price).div(shares) :
-            //total price for NFT, 75% of old price plus 25% of new price
-            m_nfts[nft_id]._last_price.mul(3).add(total_shares.mul(price).div(shares)).div(4);
-    }
-
     function getNFT (uint256 nft_id) public view returns (NFTStructs.NFT memory) {
         require (isOkNft(nft_id), "no NFT");
         return m_nfts[nft_id];

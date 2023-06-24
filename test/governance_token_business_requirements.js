@@ -64,7 +64,8 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
     const ZERO_SHARES = 0;
     const INITIAL_TOKEN_BALANCE = 200;
     const PRICE = 1000;
-    const TOKENS_TO_VOTING_POWER = 100;
+    const TOKENS_TO_VOTING_POWER = 1;
+    const MONETARY_VALUE = 500;
 
 
     context('deployment and setup checks', function () {
@@ -331,6 +332,28 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                 token: this.token_logic.address,
             });
         });
+        it('GovernanceToken reverting on unauthorised setting up DebtManager', async () => {
+            await expectRevert.unspecified(
+                this.gt_logic.setDebtManager(this.dm_logic.address, {from:deployer_address}));
+        });
+        it('GovernanceToken setting up DebtManager', async () => {
+            let txResult = await this.gt_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
+            const {logs} = txResult;
+            expectEvent.inLogs(logs, 'DebtManagerSet', {
+                debt_manager: this.dm_logic.address,
+            });
+        });
+        it('GovernanceToken reverting on unauthorised setting up StakesManager', async () => {
+            await expectRevert.unspecified(
+                this.gt_logic.setStakesManager(this.sm_logic.address, {from:deployer_address}));
+        });
+        it('GovernanceToken setting up StakesManager', async () => {
+            let txResult = await this.gt_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
+            const {logs} = txResult;
+            expectEvent.inLogs(logs, 'StakesManagerSet', {
+                stakes_manager: this.sm_logic.address,
+            });
+        });
 
         it('GovernanceToken check that setup is complete', async () => {
             const txResult = await this.gt_logic.depositTokens(
@@ -505,6 +528,8 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
             await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
             await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
             await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
+            await this.gt_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
+            await this.gt_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
             await this.token_logic.setAddressRegistered(other_user, true, {from: minter_address});
             await this.token_logic.setAddressRegistered(digital_investor, true, {from: minter_address});
@@ -526,20 +551,24 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
             await this.pc_logic.registerProjectBudget(deployer_address, "2", "2000", "1000", {from: deployer_address});
 
             //3
-            await this.dm_logic.registerDebt(other_user, "1", "100000", "136", SHARES_TOTAL.toString(), {from: minter_address});
+            await this.dm_logic.registerDebt(other_user, "1", MONETARY_VALUE.toString(), "136", SHARES_TOTAL.toString(), {from: minter_address});
             //4
-            await this.sm_logic.stake(other_user, "500", "1", SHARES_TOTAL.toString(), {from: other_user});
+            await this.sm_logic.stake(other_user, MONETARY_VALUE.toString(), "1", SHARES_TOTAL.toString(), {from: other_user});
             //5
-            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", "1", PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.dm_logic.registerDebt(other_user, "2", MONETARY_VALUE.toString(), "136", SHARES_TOTAL.toString(), {from: minter_address});
             //6
-            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", "0", "1", PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.sm_logic.stake(other_user, MONETARY_VALUE.toString(), "2", SHARES_TOTAL.toString(), {from: other_user});
             //7
-            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", "0", "1", PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
             //8
-            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "0", "1", PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
+            //9
+            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
+            //10
+            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
 
 
-            const nft_ids = ["3", "4", "5", "6", "7", "8"];
+            const nft_ids = ["3", "4", "5", "6", "7", "8", "9", "10"];
             const is_ether_payment = true;
             let tx_id = await (1);
             for (let idx = 0; idx !== nft_ids.length; ++idx) {
@@ -554,10 +583,6 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                 await this.nft_c_logic.implementTransaction(tx_id.toString(), {from: deployer_address, value: (PRICE / 2).toString()});
                 ++tx_id;
             }
-
-            //9
-            //zero-value NFT
-            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "0", "1", SHARES_TOTAL.toString(), PRICE.toString(), {from: other_user});
         });
 
         let other_user_balance;
@@ -572,7 +597,10 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
 
         const PROJECT_IDS = ["0", "1"];
         const PROJECT_NAMES = ["system-wide decision", "project-related decision"];
-        let NFT_IDS = [["3", "5", "7"], ["4", "6", "8"]];
+        const NFT_IDS_OK = ["3", "4"];
+        const NFT_IDS_WRONG_PROJECT = ["5", "6"];
+        const NFT_IDS_NOT_OK = ["7", "8", "9", "10"];
+        const NFT_ID_TYPES = ["Collection", "ProjectArt", "Ticket", "Other"];
 
         for (let idx = 0; idx !== PROJECT_IDS.length; ++idx) {
             let project_id = PROJECT_IDS[idx];
@@ -644,12 +672,10 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                 expect(voting_power).to.be.bignumber.equal(company_account_vpower);
             });
 
-            let _nft_ids = NFT_IDS[idx];
-            for (let _idx = 0; _idx !== _nft_ids.length; ++_idx) {
-                let nft_id = _nft_ids[_idx];
-
+            for (let _idx = 0; _idx !== NFT_IDS_OK.length; ++_idx) {
+                let nft_id = NFT_IDS_OK[_idx];
                 it('checking NFT\'s ownership before depositing for ' + project_name, async () => {
-                    expect(await this.nft_o_logic.getSharesAvailable(other_user, nft_id, {from: other_user})).to.be.bignumber.equal((SHARES_TOTAL/2).toString());
+                    expect(await this.nft_o_logic.getSharesAvailable(other_user, nft_id, {from: other_user})).to.be.bignumber.equal((SHARES_TOTAL / 2).toString());
                     expect(await this.nft_o_logic.getSharesAvailable(deployer_address, nft_id, {from: deployer_address})).to.be.bignumber.equal((SHARES_TOTAL/2).toString());
                 });
                 it('recording voting power before depositing NFT for ' + project_name, async () => {
@@ -669,7 +695,7 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                         by: other_user,
                         project_id: project_id,
                         nft_id: nft_id,
-                        volume: (PRICE/2).toString()
+                        volume: (MONETARY_VALUE/2).toString()
                     });
                 });
                 it('depositing NFTs for ' + project_name + ' from User 2', async () => {
@@ -683,7 +709,7 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                         by: deployer_address,
                         project_id: project_id,
                         nft_id: nft_id,
-                        volume: (PRICE/2).toString()
+                        volume: (MONETARY_VALUE/2).toString()
                     });
                 });
                 it('checking NFT\'s ownership after depositing for ' + project_name, async () => {
@@ -694,20 +720,80 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                 });
                 it('checking voting power after depositing NFTs for ' + project_name, async () => {
                     let voting_power = await this.gt_logic.getVotes(other_user, project_id);
-                    expect(voting_power).to.be.bignumber.equal(other_user_vpower.add(new BN((PRICE / 2).toString())));
+                    expect(voting_power).to.be.bignumber.equal(other_user_vpower.add(new BN((MONETARY_VALUE / 2).toString())));
 
                     voting_power = await this.gt_logic.getVotes(digital_investor, project_id);
                     expect(voting_power).to.be.bignumber.equal(digital_investor_vpower);
 
                     voting_power = await this.gt_logic.getVotes(deployer_address, project_id);
-                    expect(voting_power).to.be.bignumber.equal(deployer_address_vpower.add(new BN((PRICE / 2).toString())));
+                    expect(voting_power).to.be.bignumber.equal(deployer_address_vpower.add(new BN((MONETARY_VALUE / 2).toString())));
 
                     voting_power = await this.gt_logic.getVotes(minter_address, project_id);
                     expect(voting_power).to.be.bignumber.equal(company_account_vpower);
                 });
+                it('reverting on attempt to deposit already deposited NFTs for ' + project_name + ' for another project', async () => {
+                    const another_project_id = project_id === "0" ? "1" : project_id === "1" ? "0" : "some_error";
+                    await expectRevert(this.gt_logic.depositNFTs(
+                        other_user,
+                        nft_id,
+                        another_project_id,
+                        {from: other_user})
+                    , "no NFT ownership is available, can't deposit 0");
+                    await expectRevert(this.gt_logic.depositNFTs(
+                            deployer_address,
+                            nft_id,
+                            another_project_id,
+                            {from: deployer_address})
+                        , "no NFT ownership is available, can't deposit 0");
+                });
+                it('withdrawing deposited NFTs for ' + project_name, async () => {
+                    await this.gt_logic.withdrawNFTs(
+                        other_user,
+                        nft_id,
+                        project_id,
+                        {from: other_user});
+                    await this.gt_logic.withdrawNFTs(
+                        deployer_address,
+                        nft_id,
+                        project_id,
+                        {from: deployer_address});
+                });
+            }
+            for (let _idx = 0; _idx !== NFT_IDS_NOT_OK.length; ++_idx) {
+                let nft_id = NFT_IDS_NOT_OK[_idx];
+                it('reverting on depositing ' + NFT_ID_TYPES[_idx] +' for ' + project_name, async () => {
+                    await expectRevert.unspecified(this.gt_logic.depositNFTs(
+                        other_user,
+                        nft_id,
+                        project_id,
+                        {from: other_user}), "Can't deposit a " + NFT_ID_TYPES[_idx]);
+                    await expectRevert.unspecified(this.gt_logic.depositNFTs(
+                        deployer_address,
+                        nft_id,
+                        project_id,
+                        {from: deployer_address}), "Can't deposit a " + NFT_ID_TYPES[_idx]);
+                });
+            }
+            if (project_id === "1") {
+                for (let _idx = 0; _idx !== NFT_IDS_WRONG_PROJECT.length; ++_idx) {
+                    let nft_id = NFT_IDS_WRONG_PROJECT[_idx];
+                    it('reverting on attempt to deposit NFT ' + nft_id.toString() + ' from another project for ' + project_name, async () => {
+                        await expectRevert(this.gt_logic.depositNFTs(
+                                other_user,
+                                nft_id,
+                                project_id,
+                                {from: other_user})
+                            , " What you are depositing is not owned by this project");
+                        await expectRevert(this.gt_logic.depositNFTs(
+                                deployer_address,
+                                nft_id,
+                                project_id,
+                                {from: deployer_address})
+                            , " What you are depositing is not owned by this project");
+                    });
+                }
             }
         }
-
         it('reverting on attempt to deposit a Project NFT', async () => {
             await expectRevert(this.gt_logic.depositNFTs(
                 other_user,
@@ -716,26 +802,10 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                 {from: other_user})
             , "Can't deposit a Project");
         });
-        it('reverting on attempt to deposit a zero-valued NFT', async () => {
-            await expectRevert(this.gt_logic.depositNFTs(
-                    other_user,
-                    "9",
-                    "0",
-                    {from: other_user})
-                , "NFT has not yet been a subject of a sale, can't deposit 0");
-        });
-        it('reverting on attempt to deposit an NFT for a wrong Project', async () => {
-            await expectRevert(this.gt_logic.depositNFTs(
-                    other_user,
-                    "3", //debt from project "1"
-                    "2", //existing project "2"
-                    {from: other_user})
-                , "Token is not owned by this project");
-        });
         it('reverting on attempt to deposit a non-existent NFT', async () => {
             await expectRevert(this.gt_logic.depositNFTs(
                     other_user,
-                    "42", //debt from project "1"
+                    "42",
                     "1", //existing project "2"
                     {from: other_user})
                 , "no NFT");
@@ -744,7 +814,7 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
             await expectRevert(this.gt_logic.depositNFTs(
                     other_user,
                     "3", //debt from project "1"
-                    "5", //existing NFT Collection with id == "5"
+                    "7", //existing NFT Collection with id == "7"
                     {from: other_user})
                 , "Can't deposit for a non-Project");
         });
@@ -752,7 +822,7 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
             await expectRevert(this.gt_logic.depositNFTs(
                     other_user,
                     "3", //debt from project "1"
-                    "1", //existing NFT Collection with id == "5"
+                    "1",
                     {from: digital_investor})
                 , "not approved by Governance Token");
         });
@@ -924,6 +994,8 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
             await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from:minter_address});
             await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
             await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from:minter_address});
+            await this.gt_logic.setDebtManager(this.dm_logic.address, {from:minter_address});
+            await this.gt_logic.setStakesManager(this.sm_logic.address, {from:minter_address});
 
             await this.token_logic.setAddressRegistered(other_user, true, {from: minter_address});
             await this.token_logic.setAddressRegistered(digital_investor, true, {from: minter_address});
@@ -944,20 +1016,24 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
             await this.pc_logic.registerProjectBudget(deployer_address, "2", "2000", "1000", {from: deployer_address});
 
             //3
-            await this.dm_logic.registerDebt(other_user, "1", "100000", "136", SHARES_TOTAL.toString(), {from: minter_address});
+            await this.dm_logic.registerDebt(other_user, "1", MONETARY_VALUE.toString(), "136", SHARES_TOTAL.toString(), {from: minter_address});
             //4
-            await this.sm_logic.stake(other_user, "500", "1", SHARES_TOTAL.toString(), {from: other_user});
+            await this.sm_logic.stake(other_user, MONETARY_VALUE.toString(), "1", SHARES_TOTAL.toString(), {from: other_user});
             //5
-            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", "1", PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.dm_logic.registerDebt(other_user, "1", MONETARY_VALUE.toString(), "136", SHARES_TOTAL.toString(), {from: minter_address});
             //6
-            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", "0", "1", PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.sm_logic.stake(other_user, MONETARY_VALUE.toString(), "1", SHARES_TOTAL.toString(), {from: other_user});
             //7
-            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", "0", "1", PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "Collection", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
             //8
-            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "0", "1", PRICE.toString(), SHARES_TOTAL.toString(), {from: other_user});
+            await this.nft_c_logic.mint(other_user, "ProjectArt", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
+            //9
+            await this.nft_c_logic.mint(other_user, "Ticket", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
+            //10
+            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "0", "1", SHARES_TOTAL.toString(), {from: other_user});
 
 
-            const nft_ids = ["3", "4", "5", "6", "7", "8"];
+            const nft_ids = ["3", "4", "5", "6", "7", "8", "9", "10"];
             const is_ether_payment = true;
             let tx_id = await (1);
             for (let idx = 0; idx !== nft_ids.length; ++idx) {
@@ -972,21 +1048,19 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                 await this.nft_c_logic.implementTransaction(tx_id.toString(), {from: deployer_address, value: (PRICE / 2).toString()});
                 ++tx_id;
             }
-
-            //9
-            //zero-value NFT
-            await this.nft_c_logic.mint(other_user, "Other", "www.google.com", "0", "1", SHARES_TOTAL.toString(), PRICE.toString(), {from: other_user});
         });
-        it('depositing', async () => {
-            const PROJECT_IDS = ["0", "1"];
-            const NFT_IDS = [["3", "5", "7"], ["4", "6", "8"]];
 
+        const PROJECT_IDS = ["0", "1"];
+        const PROJECT_NAMES = ["system-wide decision", "project-related decision"];
+        const NFT_IDS = [["3", "4"], ["5", "6"]];
+
+        it('depositing', async () => {
             for (let idx = 0; idx !== PROJECT_IDS.length; ++idx) {
                 const project_id = PROJECT_IDS[idx];
-                const _nft_ids = NFT_IDS[idx];
                 await this.gt_logic.depositTokens(other_user, TOKENS_TO_VOTING_POWER.toString(), project_id, {from: other_user});
                 await this.gt_logic.depositTokens(digital_investor, (TOKENS_TO_VOTING_POWER * 2).toString(), project_id, {from: digital_investor});
 
+                const _nft_ids = NFT_IDS[idx];
                 for (let _idx = 0; _idx !== _nft_ids.length; ++_idx) {
                     const nft_id = _nft_ids[_idx];
                     await this.gt_logic.depositNFTs(other_user, nft_id, project_id, {from: other_user});
@@ -1013,7 +1087,7 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                     {from: other_user})
                 , "NFT is not deposited");
         });
-        it('reverting on attempt to withdraw an NFT that for non-existent project', async () => {
+        it('reverting on attempt to withdraw an NFT from non-existent project', async () => {
             await expectRevert(this.gt_logic.withdrawNFTs(
                     other_user,
                     "42", //no project like with this ID
@@ -1021,7 +1095,7 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                     {from: other_user})
                 , "NFT is not deposited");
         });
-        it('reverting on attempt to withdraw an NFT that from a Project where it was not deposited', async () => {
+        it('reverting on attempt to withdraw an NFT from a Project where it was not deposited', async () => {
             await expectRevert(this.gt_logic.withdrawNFTs(
                     other_user,
                     "1", //project Ok
@@ -1048,10 +1122,6 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
         let digital_investor_vpower;
         let deployer_address_vpower;
         let company_account_vpower;
-
-        const PROJECT_IDS = ["0", "1"];
-        const PROJECT_NAMES = ["system-wide decision", "project-related decision"];
-        let NFT_IDS = [["3", "5", "7"], ["4", "6", "8"]];
 
         for (let idx = 0; idx !== PROJECT_IDS.length; ++idx) {
             let project_id = PROJECT_IDS[idx];
@@ -1151,7 +1221,7 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                         by: other_user,
                         project_id: project_id,
                         nft_id: nft_id,
-                        volume: (PRICE/2).toString()
+                        volume: (MONETARY_VALUE/2).toString()
                     });
                 });
                 it('withdrawing NFTs from ' + project_name + ' for User 2', async () => {
@@ -1166,7 +1236,7 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                         by: deployer_address,
                         project_id: project_id,
                         nft_id: nft_id,
-                        volume: (PRICE/2).toString()
+                        volume: (MONETARY_VALUE/2).toString()
                     });
                 });
                 it('checking NFT\'s ownership after withdrawing for ' + project_name, async () => {
@@ -1177,13 +1247,13 @@ contract('Governance Token - BRD', ([registryFunder, deployer_address, other_use
                 });
                 it('checking voting power after withdrawing NFTs for ' + project_name, async () => {
                     let voting_power = await this.gt_logic.getVotes(other_user, project_id);
-                    expect(voting_power).to.be.bignumber.equal(other_user_vpower.sub(new BN((PRICE / 2).toString())));
+                    expect(voting_power).to.be.bignumber.equal(other_user_vpower.sub(new BN((MONETARY_VALUE / 2).toString())));
 
                     voting_power = await this.gt_logic.getVotes(digital_investor, project_id);
                     expect(voting_power).to.be.bignumber.equal(digital_investor_vpower);
 
                     voting_power = await this.gt_logic.getVotes(deployer_address, project_id);
-                    expect(voting_power).to.be.bignumber.equal(deployer_address_vpower.sub(new BN((PRICE / 2).toString())));
+                    expect(voting_power).to.be.bignumber.equal(deployer_address_vpower.sub(new BN((MONETARY_VALUE / 2).toString())));
 
                     voting_power = await this.gt_logic.getVotes(minter_address, project_id);
                     expect(voting_power).to.be.bignumber.equal(company_account_vpower);

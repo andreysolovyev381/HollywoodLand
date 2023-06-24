@@ -18,7 +18,6 @@ library NFTStructs {
         string _uri;
         bool _minted;
         bool _burned;
-        uint256 _last_price;
     }
 
     enum TransactionStatus {

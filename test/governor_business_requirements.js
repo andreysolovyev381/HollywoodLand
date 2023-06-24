@@ -297,10 +297,13 @@ contract('Governor - BRD', (
         await this.gt_logic.setNFTCatalog(this.nft_c_logic.address, {from: minter_address});
         await this.gt_logic.setNFTOwnership(this.nft_o_logic.address, {from: minter_address});
         await this.gt_logic.setProjectCatalog(this.pc_logic.address, {from: minter_address});
+        await this.gt_logic.setDebtManager(this.dm_logic.address, {from: minter_address});
+        await this.gt_logic.setStakesManager(this.sm_logic.address, {from: minter_address});
 
         // await this.gvrn_logic.setNativeToken(this.token_logic.address, {from: minter_address});
         // await this.gvrn_logic.setNFTCatalog(this.nft_c_logic.address, {from: minter_address});
         // await this.gvrn_logic.setProjectCatalog(this.pc_logic.address, {from: minter_address});
+        // await this.gvrn_logic.setNFTOwnership(this.nft_o_logic.address, {from:minter_address});
 
         await this.pc_logic.createProject(other_user, "Test project1", "Production", "Script", SHARES_TOTAL.toString(), {from: other_user});
         await this.pc_logic.registerProjectBudget(other_user, "1", "1000", "3500", {from: other_user});
@@ -409,6 +412,17 @@ contract('Governor - BRD', (
             token: this.token_logic.address,
         });
     });
+    it('deployment: Governor reverting on unauthorised setting up NFTOwnership', async () => {
+        await expectRevert.unspecified(
+            this.gvrn_logic.setNFTOwnership(this.nft_o_logic.address, {from: deployer_address}));
+    });
+    it('deployment: Governor setting up NFTOwnership', async () => {
+        let txResult = await this.gvrn_logic.setNFTOwnership(this.nft_o_logic.address, {from: minter_address});
+        const {logs} = txResult;
+        expectEvent.inLogs(logs, 'NFTOwnershipSet', {
+            nft_ownership: this.nft_o_logic.address,
+        });
+    });
     it('deployment: Governor check that setup is complete', async () => {
         this.proposal = this.helper.setProposal(
             0,
@@ -433,7 +447,22 @@ contract('Governor - BRD', (
             description: "System-wide proposal 2nd"
         });
     });
+    it('voting: revert making unauthorized proposal', async () => {
+        this.proposal = this.helper.setProposal(
+            1,
+            [
+                {
+                    target: this.receiver.address,
+                    data: this.receiver.contract.methods.mockFunction().encodeABI(),
+                    value,
+                },
+            ], "Project-specific 1 proposal to be reverted");
 
+        await expectRevert(
+            this.helper.propose({from: proposer})
+            , "Only project owner can propose"
+        );
+    });
     it('voting: make proposal', async () => {
         this.proposal = this.helper.setProposal(
             0,
@@ -631,6 +660,14 @@ contract('Governor - BRD', (
 
         // After voting period is over
         expect(await this.gvrn_logic.state(this.proposal.id)).to.be.bignumber.equal(Enums.ProposalState.Executed);
+        expect(await this.gvrn_logic.hasVoted(this.proposal.id, owner)).to.be.equal(false);
+        expect(await this.gvrn_logic.hasVoted(this.proposal.id, voter1)).to.be.equal(false);
+        expect(await this.gvrn_logic.hasVoted(this.proposal.id, voter2)).to.be.equal(true);
+
+        //this assert fails, but doesn't affect voting results - see 5 lines above
+        //the problem is that there is an unknown address, issued by this Event
+        //this test should researched while testing the contracts in the test net
+        expect(await this.gvrn_logic.hasVoted(this.proposal.id, voterBySig.address)).to.be.equal(true);
     });
 
     it('revert: vote - if proposal does not exist', async () => {

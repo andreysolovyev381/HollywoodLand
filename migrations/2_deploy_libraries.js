@@ -28,6 +28,7 @@ module.exports = async (deployer, network, accounts) => {
   deployer.link(ExternalFuncs, DebtManagerImplementation);
   deployer.link(ExternalFuncs, RevenuesManagerImplementation);
   deployer.link(ExternalFuncs, StakesManagerImplementation);
+  deployer.link(ExternalFuncs, GovernanceTokenImplementation);
 
   await deployer.deploy(IterableSet);
   await IterableSet.deployed();
@@ -46,5 +47,6 @@ module.exports = async (deployer, network, accounts) => {
   await NFT_Helpers.deployed();
   deployer.link(NFT_Helpers, NFTCatalogImplementation);
   deployer.link(NFT_Helpers, NFT_TransactionPool_Implementation);
+  deployer.link(NFT_Helpers, GovernanceTokenImplementation);
 
 }
