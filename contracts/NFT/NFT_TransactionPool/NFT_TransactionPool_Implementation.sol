@@ -2,9 +2,10 @@
 pragma solidity >=0.8.0;
 
 import "./NFT_TransactionPoolStorage.sol";
-import "../Libs/NFTStructs.sol";
 import "../Libs/NFT_Helpers.sol";
 import "../../Libs/InheritanceHelpers.sol";
+import "../NFTCatalog/INFTCatalog.sol";
+import "../NFTOwnership/INFTOwnership.sol";
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
@@ -12,6 +13,13 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract NFT_TransactionPool_Implementation is ExternalNFT_TransactionPoolStorage, ControlBlock {
     using Counters for Counters.Counter;
     using SafeMath for uint256;
+
+    INFTCatalog internal m_nft_catalog;
+    INFTOwnership internal m_nft_ownership;
+
+    //Events
+    event NFTCatalogSet(address nft_catalog);
+    event NFTOwnershipSet(address nft_ownership);
 
     modifier isSetupOk() {
         require(

@@ -6,6 +6,12 @@ import "../../Libs/ExternalFuncs.sol";
 import "../../Libs/IterableSet.sol";
 import "../../Libs/InheritanceHelpers.sol";
 
+import "../../Libs/IERC777Wrapper.sol";
+import "../../ProjectCatalog/IProjectCatalog.sol";
+import "../../NFT/NFTCatalog/INFTCatalog.sol";
+import "../../NFT/NFTOwnership/INFTOwnership.sol";
+import "../StakesManager/IStakesManager.sol";
+
 import "./RevenuesManagerStorage.sol";
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -14,6 +20,18 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract RevenuesManagerImplementation is ExternalRevenuesManagerStorage, ControlBlock, ReentrancyGuard{
     using ExternalFuncs for *;
     using SafeMath for uint256;
+
+    IERC777Wrapper internal m_token;
+    IProjectCatalog internal m_project_catalog;
+    INFTCatalog internal m_nft_catalog;
+    INFTOwnership internal m_nft_ownership;
+    IStakesManager internal m_stakes_manager;
+
+    event NativeTokenSet(address token);
+    event ProjectCatalogSet(address project_catalog);
+    event NFTCatalogSet(address nft_catalog);
+    event NFTOwnershipSet(address nft_ownership);
+    event StakesManagerSet(address stakes_manager);
 
     modifier isSetupOk() {
         require(

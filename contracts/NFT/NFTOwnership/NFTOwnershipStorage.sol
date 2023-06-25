@@ -5,13 +5,6 @@ import "../../Libs/EternalStorage.sol";
 import "../../Libs/ProxyStorage.sol";
 import "../../Libs/IterableSet.sol";
 
-import "../../ProjectCatalog/IProjectCatalog.sol";
-import "../../Governance/GovernanceToken/IGovernanceToken_.sol";
-import "../NFTCatalog/INFTCatalog.sol";
-import "../NFT_TransactionPool/INFT_TransactionPool.sol";
-import "../../Finance/DebtManager/IDebtManager.sol";
-import "../../Finance/StakesManager/IStakesManager.sol";
-import "../../Finance/RevenuesManager/IRevenuesManager.sol";
 
 
 contract NFTOwnershipStorage_SpecificStorage is ProxyStorage {
@@ -48,23 +41,6 @@ contract NFTOwnershipStorage_SpecificStorage is ProxyStorage {
     //Operators
     mapping (address => mapping(uint256 => ApprovedOperators)) internal m_approvals_for_nft_operators;
     mapping(address => mapping(address => bool)) internal m_approvals_for_global_operators;
-
-    IProjectCatalog internal m_project_catalog;
-    IGovernanceToken internal m_governance_token;
-    INFTCatalog internal m_nft_catalog;
-    INFT_TransactionPool internal m_nft_transaction_pool;
-    IDebtManager internal m_debt_manager;
-    IRevenuesManager internal m_revenues_manager;
-    IStakesManager internal m_stakes_manager;
-
-    //Events
-    event NFTCatalogSet(address nft_catalog);
-    event NFT_TransactionPoolSet(address nft_tx_pool);
-    event ProjectCatalogSet(address project_catalog);
-    event DebtManagerSet(address debt_manager);
-    event RevenuesManagerSet(address revenues_manager);
-    event StakesManagerSet(address stakes_manager);
-    event GovernanceTokenSet(address governance_token);
 
     event ApprovedForTransaction(address indexed owner, address indexed to, uint256 nft_id, uint256 shares);
     event CancelledFromTransaction(address indexed owner, address indexed to, uint256 nft_id, uint256 shares);

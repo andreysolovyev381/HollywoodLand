@@ -13,6 +13,12 @@ import "../../NFT/Libs/NFTStructs.sol";
 import "../../NFT/Libs/NFT_Helpers.sol";
 import "../../Libs/InheritanceHelpers.sol";
 import "../../Libs/ExternalFuncs.sol";
+import "../../Libs/IERC777Wrapper.sol";
+import "../../ProjectCatalog/IProjectCatalog.sol";
+import "../../NFT/NFTCatalog/INFTCatalog.sol";
+import "../../NFT/NFTOwnership/INFTOwnership.sol";
+import "../../Finance/DebtManager/IDebtManager.sol";
+import "../../Finance/StakesManager/IStakesManager.sol";
 
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -24,6 +30,21 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract GovernanceTokenImplementation is ExternalGovernanceTokenStorage, ControlBlock, AligningDataStorage, ERC20Permit {
     using SafeMath for uint256;
+
+    IERC777Wrapper internal m_token;
+    IProjectCatalog internal m_project_catalog;
+    INFTCatalog internal m_nft_catalog;
+    INFTOwnership internal m_nft_ownership;
+    IDebtManager internal m_debt_manager;
+    IStakesManager internal m_stakes_manager;
+
+    event NativeTokenSet(address token);
+    event ProjectCatalogSet(address project_catalog);
+    event NFTCatalogSet(address nft_catalog);
+    event NFTOwnershipSet(address nft_ownership);
+    event DebtManagerSet(address debt_manager);
+    event StakesManagerSet(address stakes_manager);
+
 
     modifier isSetupOk() {
         require(

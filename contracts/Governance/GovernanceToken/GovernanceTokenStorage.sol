@@ -3,12 +3,6 @@ pragma solidity >=0.8.0;
 
 import "../../Libs/ProxyStorage.sol";
 import "../../Libs/EternalStorage.sol";
-import "../../Libs/IERC777Wrapper.sol";
-import "../../ProjectCatalog/IProjectCatalog.sol";
-import "../../NFT/NFTCatalog/INFTCatalog.sol";
-import "../../NFT/NFTOwnership/INFTOwnership.sol";
-import "../../Finance/DebtManager/IDebtManager.sol";
-import "../../Finance/StakesManager/IStakesManager.sol";
 
 import "../../Libs/IterableSet.sol";
 
@@ -74,23 +68,11 @@ contract GovernanceToken_SpecificStorage is ProxyStorage {
     }
     uint256 constant internal COMMON_ISSUES_UID = 0;
 
-    IERC777Wrapper internal m_token;
-    IProjectCatalog internal m_project_catalog;
-    INFTCatalog internal m_nft_catalog;
-    INFTOwnership internal m_nft_ownership;
-    IDebtManager internal m_debt_manager;
-    IStakesManager internal m_stakes_manager;
     address m_company_account;
 
     //address -> project -> deposit
     mapping (address => mapping (uint256 => Deposit)) internal m_deposits;
 
-    event NativeTokenSet(address token);
-    event ProjectCatalogSet(address project_catalog);
-    event NFTCatalogSet(address nft_catalog);
-    event NFTOwnershipSet(address nft_ownership);
-    event DebtManagerSet(address debt_manager);
-    event StakesManagerSet(address stakes_manager);
     event CompanyAccountSet(address company_account);
 
     event TokensDeposited(address indexed by, uint256 indexed project_id, uint256 indexed volume);

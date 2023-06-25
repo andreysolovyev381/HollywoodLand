@@ -7,6 +7,11 @@ import "../../NFT/Libs/NFTStructs.sol";
 import "../../Libs/ExternalFuncs.sol";
 import "../../Libs/IterableSet.sol";
 import "../../Libs/InheritanceHelpers.sol";
+import "../../Libs/IERC777Wrapper.sol";
+import "../../ProjectCatalog/IProjectCatalog.sol";
+import "../../NFT/NFTCatalog/INFTCatalog.sol";
+import "../../NFT/NFTOwnership/INFTOwnership.sol";
+
 
 import "./StakesManagerStorage.sol";
 
@@ -19,6 +24,17 @@ contract StakesManagerImplementation is ExternalStakesManagerStorage, ControlBlo
     using ExternalFuncs for *;
     using Counters for Counters.Counter;
     using SafeMath for uint256;
+
+    IERC777Wrapper internal m_token;
+    IProjectCatalog internal m_project_catalog;
+    INFTCatalog internal m_nft_catalog;
+    INFTOwnership internal m_nft_ownership;
+
+    //Events
+    event NativeTokenSet(address token);
+    event ProjectCatalogSet(address project_catalog);
+    event NFTCatalogSet(address nft_catalog);
+    event NFTOwnershipSet(address nft_ownership);
 
     modifier isSetupOk() {
         require(

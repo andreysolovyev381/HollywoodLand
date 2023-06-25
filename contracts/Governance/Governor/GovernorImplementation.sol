@@ -5,10 +5,26 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import "../../Libs/GovernorCoreWrapper.sol";
 import "../../Libs/InheritanceHelpers.sol";
+import "../../NFT/Libs/NFTStructs.sol";
+import "../../Libs/IERC777Wrapper.sol";
+import "../../ProjectCatalog/IProjectCatalog.sol";
+import "../../NFT/NFTCatalog/INFTCatalog.sol";
+import "../../NFT/NFTOwnership/INFTOwnership.sol";
 
 import "./GovernorDataStorage.sol";
 
 contract GovernorImplementation is ExternalGovernorStorage, GovernorCoreWrapper, ControlBlock {
+
+    IERC777Wrapper internal m_token;
+    IProjectCatalog internal m_project_catalog;
+    INFTCatalog internal m_nft_catalog;
+    INFTOwnership internal m_nft_ownership;
+
+    event NativeTokenSet(address token);
+    event ProjectCatalogSet(address project_catalog);
+    event NFTCatalogSet(address nft_catalog);
+    event NFTOwnershipSet(address nft_ownership);
+
 
     modifier isSetupOk() {
         require(

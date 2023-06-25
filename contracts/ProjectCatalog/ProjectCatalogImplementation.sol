@@ -4,6 +4,11 @@ pragma solidity >=0.8.0;
 import "./ProjectCatalogStorage.sol";
 import "../Libs/ExternalFuncs.sol";
 import "../Libs/InheritanceHelpers.sol";
+import "../NFT/NFTCatalog/INFTCatalog.sol";
+import "../NFT/NFTOwnership/INFTOwnership.sol";
+import "../Finance/DebtManager/IDebtManager.sol";
+import "../Finance/StakesManager/IStakesManager.sol";
+import "../Finance/RevenuesManager/IRevenuesManager.sol";
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -13,6 +18,17 @@ contract ProjectCatalogImplementation is ExternalProjectCatalogStorage, ControlB
     using ExternalFuncs for *;
     using Counters for Counters.Counter;
     using SafeMath for uint256;
+
+    INFTCatalog internal m_nft_catalog;
+    INFTOwnership internal m_nft_ownership;
+    IDebtManager internal m_debt_manager;
+    IStakesManager internal m_stakes_manager;
+    IRevenuesManager internal m_revenues_manager;
+    event NFTCatalogSet(address nft_catalog);
+    event NFTOwnershipSet(address nft_ownership);
+    event DebtManagerSet(address debt_manager);
+    event StakesManagerSet(address stakes_manager);
+    event RevenuesManagerSet(address revenues_manager);
 
     modifier isSetupOk() {
         require(

@@ -5,12 +5,36 @@ import "./NFTOwnershipStorage.sol";
 import "../Libs/NFTStructs.sol";
 import "../../Libs/ExternalFuncs.sol";
 import "../../Libs/InheritanceHelpers.sol";
+import "../../ProjectCatalog/IProjectCatalog.sol";
+import "../../Governance/GovernanceToken/IGovernanceToken_.sol";
+import "../NFTCatalog/INFTCatalog.sol";
+import "../NFT_TransactionPool/INFT_TransactionPool.sol";
+import "../../Finance/DebtManager/IDebtManager.sol";
+import "../../Finance/StakesManager/IStakesManager.sol";
+import "../../Finance/RevenuesManager/IRevenuesManager.sol";
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 
 contract NFTOwnershipImplementation is ExternalNFTOwnershipStorage, ControlBlock {
     using SafeMath for uint256;
+
+    IProjectCatalog internal m_project_catalog;
+    IGovernanceToken internal m_governance_token;
+    INFTCatalog internal m_nft_catalog;
+    INFT_TransactionPool internal m_nft_transaction_pool;
+    IDebtManager internal m_debt_manager;
+    IRevenuesManager internal m_revenues_manager;
+    IStakesManager internal m_stakes_manager;
+
+    //Events
+    event NFTCatalogSet(address nft_catalog);
+    event NFT_TransactionPoolSet(address nft_tx_pool);
+    event ProjectCatalogSet(address project_catalog);
+    event DebtManagerSet(address debt_manager);
+    event RevenuesManagerSet(address revenues_manager);
+    event StakesManagerSet(address stakes_manager);
+    event GovernanceTokenSet(address governance_token);
 
     modifier isSetupOk() {
         require(

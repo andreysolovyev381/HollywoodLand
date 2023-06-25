@@ -165,4 +165,6 @@ Issues were addressed the following way:
     * GovernanceTokenImplementation.sol, significant change of a function depositNFTs();
     * GovernanceTokenStorage.sol, added links to other contracts.
     * All other contracts and tests in terms of calling NFTImplementation.mint() - no need to have a price as an argument
+* **Refactoring**
+  * Interfaces were moved from storage to implementation to make upgrade easier. 
 

@@ -1,5 +1,4 @@
 const {singletons, BN} = require('@openzeppelin/test-helpers');
-const {GovernorHelper} = require("../ideas/OpenZeppelinGovernance/governance");
 require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
 
 

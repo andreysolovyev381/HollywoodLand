@@ -5,6 +5,14 @@ import "./NFTCatalogStorage.sol";
 import "../Libs/NFT_Helpers.sol";
 import "../Libs/NFTStructs.sol";
 import "../../Libs/InheritanceHelpers.sol";
+import "../../Libs/IERC777Wrapper.sol";
+import "../../Finance/DebtManager/IDebtManager.sol";
+import "../../Finance/StakesManager/IStakesManager.sol";
+import "../../Finance/RevenuesManager/IRevenuesManager.sol";
+import "../../ProjectCatalog/IProjectCatalog.sol";
+import "../../Governance/GovernanceToken/IGovernanceToken_.sol";
+import "../NFTOwnership/INFTOwnership.sol";
+import "../NFT_TransactionPool/INFT_TransactionPool.sol";
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -13,6 +21,24 @@ import "../../Governance/GovernanceToken/GovernanceTokenImplementation.sol";
 contract NFTCatalogImplementation is ExternalNFTCatalogStorage, ControlBlock {
     using Counters for Counters.Counter;
     using SafeMath for uint256;
+
+    IERC777Wrapper internal m_token;
+    IDebtManager internal m_debt_manager;
+    IRevenuesManager internal m_revenues_manager;
+    IStakesManager internal m_stakes_manager;
+    IProjectCatalog internal m_project_catalog;
+    IGovernanceToken internal m_governance_token;
+    INFTOwnership internal m_nft_ownership;
+    INFT_TransactionPool internal m_nft_transaction_pool;
+
+    event NativeTokenSet(address token);
+    event DebtManagerSet(address debt_manager);
+    event RevenuesManagerSet(address revenues_manager);
+    event StakesManagerSet(address stakes_manager);
+    event ProjectCatalogSet(address project_catalog);
+    event GovernanceTokenSet(address governance_token);
+    event NFTOwnershipSet(address nft_ownership);
+
 
     modifier isSetupOk() {
         require(

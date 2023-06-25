@@ -4,11 +4,6 @@ pragma solidity >= 0.8.0;
 import "../Libs/EternalStorage.sol";
 import "../Libs/IterableSet.sol";
 import "../Libs/ProxyStorage.sol";
-import "../NFT/NFTCatalog/INFTCatalog.sol";
-import "../NFT/NFTOwnership/INFTOwnership.sol";
-import "../Finance/DebtManager/IDebtManager.sol";
-import "../Finance/StakesManager/IStakesManager.sol";
-import "../Finance/RevenuesManager/IRevenuesManager.sol";
 
 contract ProjectCatalog_SpecificStorage is ProxyStorage{
 
@@ -58,22 +53,10 @@ contract ProjectCatalog_SpecificStorage is ProxyStorage{
     //Where the tokens are either earned or spent
     address internal m_company_account;
 
-    INFTCatalog internal m_nft_catalog;
-    INFTOwnership internal m_nft_ownership;
-    IDebtManager internal m_debt_manager;
-    IStakesManager internal m_stakes_manager;
-    IRevenuesManager internal m_revenues_manager;
-
     mapping (uint256 => Project) m_projects;
     mapping (uint256 => ProjectBudget) internal m_budgets;
 
     //Events
-    event NFTCatalogSet(address nft_catalog);
-    event NFTOwnershipSet(address nft_ownership);
-    event DebtManagerSet(address debt_manager);
-    event StakesManagerSet(address stakes_manager);
-    event RevenuesManagerSet(address revenues_manager);
-
     event ProjectCreated(address indexed by_address, string name, uint256 indexed id);
     event ProjectDeleted(address indexed by_address, uint256 indexed id);
     event OwnershipOfProjectDeleted(address indexed by_address, uint256 indexed id);

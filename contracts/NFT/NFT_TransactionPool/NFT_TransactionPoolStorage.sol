@@ -4,9 +4,7 @@ pragma solidity >=0.8.0;
 import "../../Libs/EternalStorage.sol";
 import "../../Libs/ProxyStorage.sol";
 import "../../Libs/IterableSet.sol";
-
-import "../NFTCatalog/INFTCatalog.sol";
-import "../NFTOwnership/INFTOwnership.sol";
+import "../Libs/NFTStructs.sol";
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 
@@ -21,12 +19,6 @@ contract NFT_TransactionPoolStorage_SpecificStorage is ProxyStorage {
     mapping (NFTStructs.NftType => uint256) m_transaction_fee;
     mapping (address => IterableSet.Set) m_address_to_txs;
 
-    INFTCatalog m_nft_catalog;
-    INFTOwnership internal m_nft_ownership;
-
-    //Events
-    event NFTCatalogSet(address nft_catalog);
-    event NFTOwnershipSet(address nft_ownership);
 }
 
 contract ExternalNFT_TransactionPoolStorage is NFT_TransactionPoolStorage_SpecificStorage, EternalStorage {
